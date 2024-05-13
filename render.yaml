@@ -1,9 +1,12 @@
+# rank-gpt4
 services:
-  # A Docker web service
-  - type: web
-    name: kiss-reranker
-    runtime: python
-    plan: free
-    autoDeploy: true
-    buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+- type: web
+  name: kiss-rerank
+  runtime: python
+  repo: https://github.com/soderalohastrom/kiss-rerank
+  branch: rank-gpt4
+  plan: standard
+  region: oregon
+  buildCommand: pip install -r requirements.txt
+  startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+version: "1"

@@ -1,4 +1,4 @@
-# Exported from Render on 2024-05-13T18:40:33Z
+# main
 services:
 - type: web
   name: kiss-rerank

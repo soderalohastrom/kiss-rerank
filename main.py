@@ -5,7 +5,7 @@ from typing import List
 
 app = FastAPI()
 # ranker = Reranker("cohere", lang='en', api_key='n1ytpDT5S9jVqY1abqvqoD6flMgo8M25UJce9fLy')
-ranker = Reranker("colbert")
+ranker = Reranker("unicamp-dl/InRanker-base", model_type = "t5")
 
 class Document(BaseModel):
     doc_id: int = Field(..., description="The unique ID of the document")

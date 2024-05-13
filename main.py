@@ -5,7 +5,7 @@ from typing import List
 
 app = FastAPI()
 # ranker = Reranker("cohere", lang='en', api_key='n1ytpDT5S9jVqY1abqvqoD6flMgo8M25UJce9fLy')
-ranker = Reranker("colbert")
+ranker = Reranker('mixedbread-ai/mxbai-rerank-large-v1', model_type='cross-encoder')
 
 class Document(BaseModel):
     doc_id: int = Field(..., description="The unique ID of the document")

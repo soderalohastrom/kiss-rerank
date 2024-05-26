@@ -1,2 +1,2 @@
 fastapi[all]
-rerankers[fastrank]
+rerankers[flashrank]

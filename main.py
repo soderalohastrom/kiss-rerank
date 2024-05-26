@@ -4,7 +4,7 @@ from rerankers import Reranker
 from typing import List
 
 app = FastAPI()
-ranker = Reranker("fastrank")
+ranker = Reranker("flashrank")
 
 class Document(BaseModel):
     doc_id: int = Field(..., description="The unique ID of the document")

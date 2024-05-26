@@ -4,7 +4,7 @@ from rerankers import Reranker
 from typing import List
 
 app = FastAPI()
-ranker = Reranker("jina", api_key = "jina_2e178e1765c643819cf3a3b5416df8e13YOqj13T3PYoB79pUKSmWS9G_HZ-")
+ranker = Reranker("jina", api_key = 'jina_2e178e1765c643819cf3a3b5416df8e13YOqj13T3PYoB79pUKSmWS9G_HZ-')
 
 class Document(BaseModel):
     doc_id: int = Field(..., description="The unique ID of the document")

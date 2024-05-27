@@ -7,7 +7,7 @@ from pinecone import Pinecone
 from rerankers import Reranker
 
 app = FastAPI()
-ranker = Reranker("colbert")
+ranker = Reranker("jina", api_key = 'jina_bf5ea4fa09d94000b6ac739ac8c03e6abDa7EGRVPAcmEmUI4CV1rv9efZnk')
 
 class Document(BaseModel):
     doc_id: int = Field(..., description="The unique ID of the document")

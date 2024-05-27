@@ -7,18 +7,6 @@ from pinecone import Pinecone
 from rerankers import Reranker
 
 app = FastAPI()
-ranker = Reranker("jina", api_key = 'jina_bf5ea4fa09d94000b6ac739ac8c03e6abDa7EGRVPAcmEmUI4CV1rv9efZnk')
-
-class Document(BaseModel):
-    doc_id: int = Field(..., description="The unique ID of the document")
-    text: str = Field(..., description="The text of the document")
-
-class RerankRequest(BaseModel):
-    query: str = Field(..., description="The query to rank the documents against")
-    documents: List[Document] = Field(..., description="The documents to be reranked")
-
-class RerankResponse(BaseModel):
-    reranked_documents: List[Document] = Field(..., description="The reranked documents")
 
 def hybrid_score_norm(dense, sparse, alpha: float):
     """Hybrid score using a convex combination
@@ -37,18 +25,33 @@ def hybrid_score_norm(dense, sparse, alpha: float):
         'values':  [v * (1 - alpha) for v in sparse['values']]
     }
     return [v * alpha for v in dense], hs
+class Document(BaseModel):
+    doc_id: int = Field(..., description="The unique ID of the document")
+    text: str = Field(..., description="The text of the document")
+
+class RerankRequest(BaseModel):
+    query: str = Field(..., description="The query to rank the documents against")
+    documents: List[Document] = Field(..., description="The documents to be reranked")
+
+class RerankResponse(BaseModel):
+    reranked_documents: List[Document] = Field(..., description="The reranked documents")
+
 
 @app.post("/rerank", response_model=RerankResponse)
-async def rerank_documents(rerank_request: RerankRequest):
+async def rerank_documents(search_params: SearchParams, rerank_request: RerankRequest):
     # Initialize Pinecone client
     pc = Pinecone(api_key="bb2dea00-df61-404e-9f29-5e40faee47c4")
 
-    # Set the index and namespace parameters
-    profile_id = "240244"
-    index_name = "cohere"
-    query_namespace = "cohere-guys"
-    search_namespace = "cohere-dolls"
-    alpha = 0.5
+    # Extract the search parameters from the request body
+    profile_id = search_params.profile_id
+    index_name = search_params.index_name
+    query_namespace = search_params.query_namespace
+    search_namespace = search_params.search_namespace
+    alpha = search_params.alpha
+    reranker = search_params.reranker
+
+    # Initialize the reranker
+    ranker = Reranker(reranker)
 
     # Connect to the index
     index = pc.Index(index_name)

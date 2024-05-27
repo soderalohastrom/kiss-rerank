@@ -25,6 +25,7 @@ def hybrid_score_norm(dense, sparse, alpha: float):
         'values':  [v * (1 - alpha) for v in sparse['values']]
     }
     return [v * alpha for v in dense], hs
+
 class Document(BaseModel):
     doc_id: int = Field(..., description="The unique ID of the document")
     text: str = Field(..., description="The text of the document")
@@ -36,6 +37,13 @@ class RerankRequest(BaseModel):
 class RerankResponse(BaseModel):
     reranked_documents: List[Document] = Field(..., description="The reranked documents")
 
+class SearchParams(BaseModel):
+    profile_id: str = Field(..., description="The profile ID to fetch the vector for")
+    index_name: str = Field(..., description="The name of the Pinecone index")
+    query_namespace: str = Field(..., description="The namespace for the query vector")
+    search_namespace: str = Field(..., description="The namespace for the search vectors")
+    alpha: float = Field(..., description="The weight for the dense vector in the hybrid score")
+    reranker: str = Field(..., description="The name of the reranker to use")
 
 @app.post("/rerank", response_model=RerankResponse)
 async def rerank_documents(search_params: SearchParams, rerank_request: RerankRequest):

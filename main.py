@@ -29,12 +29,7 @@ def hybrid_score_norm(dense, sparse, alpha: float):
 class Document(BaseModel):
     doc_id: int = Field(..., description="The unique ID of the document")
     text: str = Field(..., description="The text of the document")
-    index: int = Field(..., description="The index of the document in the original list")
-    relevance_score: float = Field(..., description="The relevance score of the document")
-class RerankRequest(BaseModel):
-    query: str = Field(..., description="The query to rank the documents against")
-    documents: List[Document] = Field(..., description="The documents to be reranked")
-
+    
 class RerankResponse(BaseModel):
     reranked_documents: List[Document] = Field(..., description="The reranked documents")
 
@@ -136,11 +131,11 @@ async def rerank_documents(search_params: SearchParams, rerank_request: RerankRe
     documents = [
         Document(
             doc_id=match['profile_id'],
-            text=match['rerank_chunk'],
-            index=index
+            text=match['rerank_chunk']
         )
-        for index, match in enumerate(matches_with_hybrid_scores)
+        for match in matches_with_hybrid_scores
     ]
+
     # Rerank the documents using the provided query
     reranked_results = ranker.rank(
         query=rerank_request.query,
@@ -156,9 +151,7 @@ async def rerank_documents(search_params: SearchParams, rerank_request: RerankRe
     top_reranked_documents = [
         Document(
             doc_id=result.doc_id,
-            text=result.text,
-            index=result.index,
-            relevance_score=result.score
+            text=result.text
         )
         for result in top_reranked_results
     ]

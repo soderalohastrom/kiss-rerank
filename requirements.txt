@@ -1,3 +1,5 @@
 fastapi[all]
-rerankers[all]
+rerankers[gpt]
+rerankers[api]
+rerankers[transformers]
 pinecone-client

@@ -29,7 +29,10 @@ def hybrid_score_norm(dense, sparse, alpha: float):
 class Document(BaseModel):
     doc_id: int = Field(..., description="The unique ID of the document")
     text: str = Field(..., description="The text of the document")
-    
+
+class RerankRequest(BaseModel):
+    query: str = Field(..., description="The query for reranking")
+
 class RerankResponse(BaseModel):
     reranked_documents: List[Document] = Field(..., description="The reranked documents")
 

@@ -97,7 +97,7 @@ async def rerank_documents(search_params: SearchParams, rerank_request: RerankRe
     # Perform a similarity search in the women's namespace using the hybrid vectors
     search_response = index.query(
         namespace=search_namespace,
-        top_k=10,
+        top_k=30,
         vector=query_vector_hybrid,
         sparse_vector=query_sparse_vector_hybrid,
         include_values=True,
@@ -147,7 +147,7 @@ async def rerank_documents(search_params: SearchParams, rerank_request: RerankRe
     )
 
     # Get the top-k reranked results
-    top_k = 5  # Set the desired value for top-k
+    top_k = 20  # Set the desired value for top-k
     top_reranked_results = reranked_results.top_k(top_k)
 
     # Prepare the top-k reranked documents for the response

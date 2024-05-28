@@ -133,8 +133,14 @@ async def rerank_documents(search_params: SearchParams, rerank_request: RerankRe
     matches_with_hybrid_scores.sort(key=lambda x: x['hybrid_score'], reverse=True)
 
     # Prepare the documents for reranking
-    documents = [Document(doc_id=match['profile_id'], text=match['rerank_chunk']) for match in matches_with_hybrid_scores]
-
+    documents = [
+        Document(
+            doc_id=match['profile_id'],
+            text=match['rerank_chunk'],
+            index=index
+        )
+        for index, match in enumerate(matches_with_hybrid_scores)
+    ]
     # Rerank the documents using the provided query
     reranked_results = ranker.rank(
         query=rerank_request.query,

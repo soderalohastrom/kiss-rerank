@@ -43,7 +43,7 @@ class SearchParams(BaseModel):
     query_namespace: str = Field(..., description="The namespace for the query vector")
     search_namespace: str = Field(..., description="The namespace for the search vectors")
     alpha: float = Field(..., description="The weight for the dense vector in the hybrid score")
-    reranker: str = Field(..., description="The name of the reranker to use")
+    reranker: str = Field(..., description="The JSON-encoded reranker configuration")
 
 @app.post("/rerank", response_model=RerankResponse)
 async def rerank_documents(search_params: SearchParams, rerank_request: RerankRequest):
@@ -56,10 +56,21 @@ async def rerank_documents(search_params: SearchParams, rerank_request: RerankRe
     query_namespace = search_params.query_namespace
     search_namespace = search_params.search_namespace
     alpha = search_params.alpha
-    reranker = search_params.reranker
+    # Parse the JSON-encoded reranker configuration
+    reranker_config = json.loads(search_params.reranker)
+    reranker_name = reranker_config['name']
 
-    # Initialize the reranker
-    ranker = Reranker(reranker)
+    # Initialize the reranker based on the parsed configuration
+    if reranker_name == "jina":
+        ranker = Reranker("jina", api_key=reranker_config['api_key'])
+    elif reranker_name == "cohere":
+        ranker = Reranker("cohere", lang=reranker_config['lang'], api_key=reranker_config['api_key'])
+    elif reranker_name == "flashrank":
+        ranker = Reranker("flashrank")
+    elif reranker_name == "colbert":
+        ranker = Reranker("colbert")
+    else:
+        raise ValueError(f"Unsupported reranker: {reranker_name}")
 
     # Connect to the index
     index = pc.Index(index_name)

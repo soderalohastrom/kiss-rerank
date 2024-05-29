@@ -68,10 +68,6 @@ async def rerank_documents(search_params: SearchParams, rerank_request: RerankRe
         ranker = Reranker("voyage", api_key=reranker_config['api_key'])
     elif reranker_name == "mixedbread.ai":
         ranker = Reranker("mixedbread.ai", api_key=reranker_config['api_key'])
-    elif reranker_name == "flashrank":
-        ranker = Reranker("flashrank")
-    elif reranker_name == "colbert":
-        ranker = Reranker("colbert")
     else:
         raise ValueError(f"Unsupported reranker: {reranker_name}")
 

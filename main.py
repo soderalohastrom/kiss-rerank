@@ -60,8 +60,8 @@ async def rerank_documents(search_params: SearchParams, rerank_request: RerankRe
     search_namespace = search_params.search_namespace
     alpha = search_params.alpha
  
-    # ranker = Reranker("rankgpt", api_key = os.getenv('OPENAI_API_KEY'))
-    ranker = Reranker("claude-3-opus-20240229", model_type = "rankgpt", api_key = os.getenv('ANTHROPIC_API_KEY'))
+    ranker = Reranker("rankgpt", api_key = os.getenv('OPENAI_API_KEY'))
+    # ranker = Reranker("claude-3-opus-20240229", model_type = "rankgpt", api_key = os.getenv('ANTHROPIC_API_KEY'))
 
     # Connect to the index
     index = pc.Index(index_name)

@@ -5,6 +5,11 @@ import json
 from pprint import pprint
 from pinecone import Pinecone
 from rerankers import Reranker
+from dotenv import load_dotenv
+import os
+
+# Load environment variables from .env file
+load_dotenv()
 
 app = FastAPI()
 

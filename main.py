@@ -10,7 +10,8 @@ load_dotenv()
 # openai_api_key = os.getenv("OPENAI_API_KEY")
 
 app = FastAPI()
-ranker = Reranker("rankgpt", api_key = os.getenv('OPENAI_API_KEY'))
+# ranker = Reranker("rankgpt", api_key = os.getenv('OPENAI_API_KEY'))
+ranker = Reranker("claude-3-opus-20240229", model_type = "rankgpt", api_key = os.getenv('ANTHROPIC_API_KEY'))
 
 class Document(BaseModel):
     doc_id: int = Field(..., description="The unique ID of the document")

@@ -64,6 +64,10 @@ async def rerank_documents(search_params: SearchParams, rerank_request: RerankRe
         ranker = Reranker("jina", api_key=reranker_config['api_key'])
     elif reranker_name == "cohere":
         ranker = Reranker("cohere", lang=reranker_config['lang'], api_key=reranker_config['api_key'])
+    elif reranker_name == "voyage":
+        ranker = Reranker("voyage", api_key=reranker_config['api_key'])
+    elif reranker_name == "mixedbread.ai":
+        ranker = Reranker("mixedbread.ai", api_key=reranker_config['api_key'])
     elif reranker_name == "flashrank":
         ranker = Reranker("flashrank")
     elif reranker_name == "colbert":

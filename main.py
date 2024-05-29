@@ -4,9 +4,9 @@ from rerankers import Reranker
 from typing import List
 
 app = FastAPI()
-# ranker = Reranker("flashrank")
+ranker = Reranker("flashrank")
 # ranker = Reranker('ms-marco-MiniLM-L-12-v2', model_type='flashrank')
-ranker = Reranker('rank_zephyr_7b_v1_full', model_type='flashrank')
+# ranker = Reranker('rank_zephyr_7b_v1_full', model_type='flashrank')
 
 class Document(BaseModel):
     doc_id: int = Field(..., description="The unique ID of the document")

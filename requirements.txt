@@ -1,3 +1,2 @@
 fastapi[all]
-rerankers[gpt]
-nmslib
+rerankers[gpt]==0.2.0

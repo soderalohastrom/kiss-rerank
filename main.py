@@ -63,7 +63,6 @@ async def rerank_documents(search_params: SearchParams, rerank_request: RerankRe
     ranker = Reranker("rankgpt", api_key = os.getenv('OPENAI_API_KEY'))
     # ranker = Reranker("claude-3-opus-20240229", model_type = "rankgpt", api_key = os.getenv('ANTHROPIC_API_KEY'))
 
-
     # Connect to the index
     index = pc.Index(index_name)
 
@@ -90,7 +89,7 @@ async def rerank_documents(search_params: SearchParams, rerank_request: RerankRe
     # Perform a similarity search in the women's namespace using the hybrid vectors
     search_response = index.query(
         namespace=search_namespace,
-        top_k=30,
+        top_k=40,
         vector=query_vector_hybrid,
         sparse_vector=query_sparse_vector_hybrid,
         include_values=True,

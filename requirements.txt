@@ -1,5 +1,5 @@
 fastapi[all]
-rerankers
+rerankers[rankllm]
 tqdm>=4.66.2
 openai>=1.23.6
 tiktoken>=0.6.0
@@ -10,3 +10,4 @@ faiss-cpu>=1.8.0
 ftfy>=6.2.0
 dacite>=1.8.1
 fschat[model_worker]>=0.2.36
+nmslib

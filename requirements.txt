@@ -1,2 +1,3 @@
 fastapi[all]
 rerankers[gpt]==0.2.0
+pinecone-client

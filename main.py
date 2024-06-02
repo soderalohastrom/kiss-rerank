@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Response
 from pydantic import BaseModel, Field
 from typing import List
 import json
@@ -45,7 +45,7 @@ class SearchParams(BaseModel):
     reranker: str = Field(..., description="The JSON-encoded reranker configuration")
 
 @app.post("/rerank", response_model=RerankResponse)
-async def rerank_documents(search_params: SearchParams, rerank_request: RerankRequest):
+async def rerank_documents(search_params: SearchParams, rerank_request: RerankRequest, response: Response):
     # Initialize Pinecone client
     pc = Pinecone(api_key="bb2dea00-df61-404e-9f29-5e40faee47c4")
 
@@ -158,5 +158,23 @@ async def rerank_documents(search_params: SearchParams, rerank_request: RerankRe
         )
         for result in top_reranked_results
     ]
+
+     # Set the cookie in the response headers
+    cookie_value = json.dumps({
+        'similarity-net-size': search_params.top_k,
+        'embedding-model': search_params.embedding_model,
+        'hybrid-alpha-mix': search_params.alpha,
+        'reranker-model': search_params.reranker,
+        'final-results-size': len(top_reranked_documents)
+    })
+    response.set_cookie(
+        key="kiss_settings",
+        value=cookie_value,
+        max_age=3600,
+        path="/",
+        domain="kiss-qa.kelleher-international.com",
+        secure=False,
+        httponly=False
+    )
 
     return RerankResponse(reranked_documents=top_reranked_documents)

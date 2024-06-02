@@ -152,7 +152,7 @@ async def rerank_documents(search_params: SearchParams, rerank_request: RerankRe
     top_k = 20  # Set the desired value for top-k
     top_reranked_results = reranked_results.top_k(top_k)
 
-    # Prepare the top-k reranked documents for the response
+     # Prepare the top-k reranked documents for the response
     top_reranked_documents = [
         Document(
             doc_id=result.doc_id,

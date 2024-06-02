@@ -43,6 +43,8 @@ class SearchParams(BaseModel):
     search_namespace: str = Field(..., description="The namespace for the search vectors")
     alpha: float = Field(..., description="The weight for the dense vector in the hybrid score")
     reranker: str = Field(..., description="The JSON-encoded reranker configuration")
+    top_k: int = Field(..., description="The number of top results to retrieve")
+    embedding_model: str = Field(..., description="The embedding model used for similarity search")
 
 @app.post("/rerank", response_model=RerankResponse)
 async def rerank_documents(search_params: SearchParams, rerank_request: RerankRequest, response: Response):
@@ -159,7 +161,7 @@ async def rerank_documents(search_params: SearchParams, rerank_request: RerankRe
         for result in top_reranked_results
     ]
 
-     # Set the cookie in the response headers
+    # Set the cookie in the response headers
     cookie_value = json.dumps({
         'similarity-net-size': search_params.top_k,
         'embedding-model': search_params.embedding_model,
@@ -170,7 +172,7 @@ async def rerank_documents(search_params: SearchParams, rerank_request: RerankRe
     response.set_cookie(
         key="kiss_settings",
         value=cookie_value,
-        max_age=3600,
+        max_age=2592000,  # 1 month in seconds (30 days * 24 hours * 60 minutes * 60 seconds)
         path="/",
         domain="kiss-qa.kelleher-international.com",
         secure=False,

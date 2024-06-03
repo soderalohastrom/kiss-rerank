@@ -166,28 +166,34 @@ async def rerank_documents(search_params: SearchParams, rerank_request: RerankRe
         for result in top_reranked_results
     ]
 
-    # Set the cookie in the response headers
-    cookie_value = json.dumps({
-        'similarity-net-size': search_params.top_k,
-        'embedding-model': search_params.embedding_model,
-        'hybrid-alpha-mix': search_params.alpha,
-        'reranker-model': search_params.reranker,
-        'final-results-size': len(top_reranked_documents)
-    })
-    response.set_cookie(
-        key="kiss_settings",
-        value=cookie_value,
-        max_age=3600,
-        path="/",
-        domain="kiss-qa.kelleher-international.com",
-        secure=False,
-        httponly=False
-    )
+class CustomJSONEncoder(json.JSONEncoder):
+    def encode(self, o):
+        encoded = super().encode(o)
+        return encoded.replace(',', '\054')
 
-    # Log the cookie value
-    logger.debug(f"Cookie value: {cookie_value}")
+# Set the cookie in the response headers
+cookie_value = json.dumps({
+    'similarity-net-size': search_params.top_k,
+    'embedding-model': search_params.embedding_model,
+    'hybrid-alpha-mix': search_params.alpha,
+    'reranker-model': search_params.reranker,
+    'final-results-size': len(top_reranked_documents)
+}, cls=CustomJSONEncoder)
 
-    # Log the response headers
-    logger.debug(f"Response headers: {response.headers}")
+response.set_cookie(
+    key="kiss_settings",
+    value=cookie_value,
+    max_age=3600,
+    path="/",
+    domain="kiss-qa.kelleher-international.com",
+    secure=False,
+    httponly=False
+)
 
-    return RerankResponse(reranked_documents=top_reranked_documents)
+# Log the cookie value
+logger.debug(f"Cookie value: {cookie_value}")
+
+# Log the response headers
+logger.debug(f"Response headers: {response.headers}")
+
+return RerankResponse(reranked_documents=top_reranked_documents)

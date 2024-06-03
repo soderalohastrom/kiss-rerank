@@ -5,6 +5,11 @@ import json
 from pprint import pprint
 from pinecone import Pinecone
 from rerankers import Reranker
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
@@ -172,11 +177,17 @@ async def rerank_documents(search_params: SearchParams, rerank_request: RerankRe
     response.set_cookie(
         key="kiss_settings",
         value=cookie_value,
-        max_age=2592000,  # 1 month in seconds (30 days * 24 hours * 60 minutes * 60 seconds)
+        max_age=3600,
         path="/",
         domain="kiss-qa.kelleher-international.com",
         secure=False,
         httponly=False
     )
+
+    # Log the cookie value
+    logger.debug(f"Cookie value: {cookie_value}")
+
+    # Log the response headers
+    logger.debug(f"Response headers: {response.headers}")
 
     return RerankResponse(reranked_documents=top_reranked_documents)

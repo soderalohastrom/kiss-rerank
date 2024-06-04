@@ -29,8 +29,6 @@ reranker_api_keys = {
     'ColbertV2': mixedbread_api_key,
     'Opus 3': mixedbread_api_key
 }
-
-
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -81,7 +79,7 @@ class CustomJSONEncoder(json.JSONEncoder):
         return encoded.replace(',', '\054')
 
 @app.post("/rerank", response_model=RerankResponse)
-async def rerank(rerank_request: RerankRequest, response: Response):
+async def rerank(rerank_request: RerankRequest, search_params: SearchParams, response: Response):
     # Initialize Pinecone client
     pc = Pinecone(api_key="bb2dea00-df61-404e-9f29-5e40faee47c4")
 
@@ -200,7 +198,7 @@ async def rerank(rerank_request: RerankRequest, response: Response):
         'similarity-net-size': search_params.top_k,
         'embedding-model': search_params.embedding_model,
         'hybrid-alpha-mix': search_params.alpha,
-        'reranker-model': search_params.reranker['name'],
+        'reranker-model': search_params.reranker,
         'final-results-size': len(top_reranked_documents)
     })
 

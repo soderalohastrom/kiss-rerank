@@ -215,6 +215,8 @@ async def rerank(rerank_request: RerankRequest, search_params: SearchParams, res
         secure=False,
         httponly=False
     )
+    # Print the cookie value for debugging
+    print("Cookie Value (main.py):", cookie_value)
 
     # Log the cookie value
     logger.debug(f"Cookie value: {cookie_value}")

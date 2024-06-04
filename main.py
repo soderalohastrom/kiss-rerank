@@ -206,15 +206,28 @@ async def rerank(rerank_request: RerankRequest, search_params: SearchParams, res
         'final-results-size': len(top_reranked_documents)
     })
 
+    # Set the cookie in the response
     response.set_cookie(
         key="kiss_settings",
-        value=cookie_value,
+        value=json.dumps({
+            'similarity-net-size': search_params.top_k,
+            'embedding-model': search_params.embedding_model,
+            'hybrid-alpha-mix': search_params.alpha,
+            'reranker-model': search_params.reranker,
+            'final-results-size': len(top_reranked_documents)
+        }),
         max_age=3600,
         path="/",
         domain="kiss-qa.kelleher-international.com",
         secure=False,
         httponly=False
     )
+
+    return RerankResponse(
+        query=rerank_request.query,
+        reranked_documents=top_reranked_documents
+    )
+    
     # Print the cookie value for debugging
     print("Cookie Value (main.py):", cookie_value)
 

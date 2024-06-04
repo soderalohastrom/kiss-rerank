@@ -6,6 +6,30 @@ from pprint import pprint
 from pinecone import Pinecone
 from rerankers import Reranker
 import logging
+from dotenv import load_dotenv
+import os
+
+# Load environment variables from .env file
+load_dotenv()
+
+app = FastAPI()
+
+# Retrieve the API keys from environment variables
+cohere_api_key = os.getenv('COHERE_API_KEY')
+mixedbread_api_key = os.getenv('MIXEDBREAD_API_KEY')
+jina_api_key = os.getenv('JINA_API_KEY')
+
+# Map reranker names to their corresponding API keys
+reranker_api_keys = {
+    'GPT-4': jina_api_key,
+    'Jina Rank': jina_api_key,
+    'Cohere': cohere_api_key,
+    'VoyageAI': cohere_api_key,
+    'Mixedbread': mixedbread_api_key,
+    'ColbertV2': mixedbread_api_key,
+    'Opus 3': mixedbread_api_key
+}
+
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -57,7 +81,7 @@ class CustomJSONEncoder(json.JSONEncoder):
         return encoded.replace(',', '\054')
 
 @app.post("/rerank", response_model=RerankResponse)
-async def rerank_documents(search_params: SearchParams, rerank_request: RerankRequest, response: Response):
+async def rerank(rerank_request: RerankRequest, response: Response):
     # Initialize Pinecone client
     pc = Pinecone(api_key="bb2dea00-df61-404e-9f29-5e40faee47c4")
 
@@ -176,9 +200,9 @@ async def rerank_documents(search_params: SearchParams, rerank_request: RerankRe
         'similarity-net-size': search_params.top_k,
         'embedding-model': search_params.embedding_model,
         'hybrid-alpha-mix': search_params.alpha,
-        'reranker-model': search_params.reranker,
+        'reranker-model': search_params.reranker['name'],
         'final-results-size': len(top_reranked_documents)
-    }, cls=CustomJSONEncoder)
+    })
 
     response.set_cookie(
         key="kiss_settings",

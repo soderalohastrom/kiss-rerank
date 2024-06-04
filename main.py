@@ -4,7 +4,7 @@ from rerankers import Reranker
 from typing import List
 
 app = FastAPI()
-ranker = Reranker("cohere", lang='en', api_key='n1ytpDT5S9jVqY1abqvqoD6flMgo8M25UJce9fLy')
+ranker = Reranker("cohere", api_key='n1ytpDT5S9jVqY1abqvqoD6flMgo8M25UJce9fLy')
 # ranker = Reranker("colbert")
 
 class Document(BaseModel):

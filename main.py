@@ -51,6 +51,11 @@ class SearchParams(BaseModel):
     top_k: int = Field(..., description="The number of top results to retrieve")
     embedding_model: str = Field(..., description="The embedding model used for similarity search")
 
+class CustomJSONEncoder(json.JSONEncoder):
+    def encode(self, o):
+        encoded = super().encode(o)
+        return encoded.replace(',', '\054')
+
 @app.post("/rerank", response_model=RerankResponse)
 async def rerank_documents(search_params: SearchParams, rerank_request: RerankRequest, response: Response):
     # Initialize Pinecone client
@@ -166,34 +171,29 @@ async def rerank_documents(search_params: SearchParams, rerank_request: RerankRe
         for result in top_reranked_results
     ]
 
-class CustomJSONEncoder(json.JSONEncoder):
-    def encode(self, o):
-        encoded = super().encode(o)
-        return encoded.replace(',', '\054')
+    # Set the cookie in the response headers
+    cookie_value = json.dumps({
+        'similarity-net-size': search_params.top_k,
+        'embedding-model': search_params.embedding_model,
+        'hybrid-alpha-mix': search_params.alpha,
+        'reranker-model': search_params.reranker,
+        'final-results-size': len(top_reranked_documents)
+    }, cls=CustomJSONEncoder)
 
-# Set the cookie in the response headers
-cookie_value = json.dumps({
-    'similarity-net-size': search_params.top_k,
-    'embedding-model': search_params.embedding_model,
-    'hybrid-alpha-mix': search_params.alpha,
-    'reranker-model': search_params.reranker,
-    'final-results-size': len(top_reranked_documents)
-}, cls=CustomJSONEncoder)
+    response.set_cookie(
+        key="kiss_settings",
+        value=cookie_value,
+        max_age=3600,
+        path="/",
+        domain="kiss-qa.kelleher-international.com",
+        secure=False,
+        httponly=False
+    )
 
-response.set_cookie(
-    key="kiss_settings",
-    value=cookie_value,
-    max_age=3600,
-    path="/",
-    domain="kiss-qa.kelleher-international.com",
-    secure=False,
-    httponly=False
-)
+    # Log the cookie value
+    logger.debug(f"Cookie value: {cookie_value}")
 
-# Log the cookie value
-logger.debug(f"Cookie value: {cookie_value}")
+    # Log the response headers
+    logger.debug(f"Response headers: {response.headers}")
 
-# Log the response headers
-logger.debug(f"Response headers: {response.headers}")
-
-return RerankResponse(reranked_documents=top_reranked_documents)
+    return RerankResponse(reranked_documents=top_reranked_documents)

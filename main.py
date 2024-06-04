@@ -90,6 +90,8 @@ async def rerank(rerank_request: RerankRequest, search_params: SearchParams, res
     search_namespace = search_params.search_namespace
     alpha = search_params.alpha
     reranker_name = search_params.reranker
+    top_k = search_params.top_k
+    embedding_model = search_params.embedding_model
 
     # Initialize the reranker based on the reranker name
     if reranker_name == "GPT-4":

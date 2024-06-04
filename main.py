@@ -1,11 +1,20 @@
+import os
 from fastapi import FastAPI
 from pydantic import BaseModel, Field
 from rerankers import Reranker
 from typing import List
 
 app = FastAPI()
-ranker = Reranker("cohere", api_key='n1ytpDT5S9jVqY1abqvqoD6flMgo8M25UJce9fLy')
-# ranker = Reranker("colbert")
+
+# Retrieve the API key from the environment variable
+api_key = os.getenv('COHERE_API_KEY')
+
+# Check if the API key is available
+if api_key:
+    ranker = Reranker("cohere", api_key=api_key)
+else:
+    raise ValueError("COHERE_API_KEY environment variable is not set")
+
 
 class Document(BaseModel):
     doc_id: int = Field(..., description="The unique ID of the document")

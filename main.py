@@ -89,21 +89,25 @@ async def rerank(rerank_request: RerankRequest, search_params: SearchParams, res
     query_namespace = search_params.query_namespace
     search_namespace = search_params.search_namespace
     alpha = search_params.alpha
-    # Parse the JSON-encoded reranker configuration
-    reranker_config = json.loads(search_params.reranker)
-    reranker_name = reranker_config['name']
+    reranker_name = search_params.reranker
 
-    # Initialize the reranker based on the parsed configuration
-    if reranker_name == "jina":
-        ranker = Reranker("jina", api_key=reranker_config['api_key'])
-    elif reranker_name == "cohere":
-        ranker = Reranker("cohere", lang=reranker_config['lang'], api_key=reranker_config['api_key'])
-    elif reranker_name == "voyage":
-        ranker = Reranker("voyage", api_key=reranker_config['api_key'])
-    elif reranker_name == "mixedbread.ai":
-        ranker = Reranker("mixedbread.ai", api_key=reranker_config['api_key'])
+    # Initialize the reranker based on the reranker name
+    if reranker_name == "GPT-4":
+        ranker = Reranker("jina", api_key=reranker_api_keys["GPT-4"])
+    elif reranker_name == "Jina Rank":
+        ranker = Reranker("jina", api_key=reranker_api_keys["Jina Rank"])
+    elif reranker_name == "Cohere":
+        ranker = Reranker("cohere", api_key=reranker_api_keys["Cohere"])
+    elif reranker_name == "VoyageAI":
+        ranker = Reranker("voyage", api_key=reranker_api_keys["VoyageAI"])
+    elif reranker_name == "Mixedbread":
+        ranker = Reranker("mixedbread.ai", api_key=reranker_api_keys["Mixedbread"])
+    elif reranker_name == "ColbertV2":
+        ranker = Reranker("mixedbread.ai", api_key=reranker_api_keys["ColbertV2"])
+    elif reranker_name == "Opus 3":
+        ranker = Reranker("mixedbread.ai", api_key=reranker_api_keys["Opus 3"])
     else:
-        raise ValueError(f"Unsupported reranker: {reranker_name}")
+        raise HTTPException(status_code=400, detail=f"Unsupported reranker: {reranker_name}")
 
     # Connect to the index
     index = pc.Index(index_name)

@@ -115,7 +115,7 @@ async def rerank(search_params: SearchParams, response: Response):
     # Prepare the documents for reranking
     documents = [
         Document(
-            doc_id=match.id,            text=match['rerank_chunk']
+            doc_id=match.id,
             text=match.metadata['bio'] + match.metadata['nuance_chunk'] + match.metadata['psych_eval']
         )
         for match in search_results.matches
@@ -138,3 +138,4 @@ async def rerank(search_params: SearchParams, response: Response):
     ]
 
     return RerankResponse(reranked_documents=reranked_documents)
+    

@@ -115,6 +115,16 @@ def rerank(search_params: SearchParams, response: Response):
     rerank_top_k = search_params.rerank_top_k
     embedding_model = search_params.embedding_model
 
+    logger.info(f"profile_id: {profile_id}")
+    logger.info(f"index_name: {index_name}")
+    logger.info(f"query_namespace: {query_namespace}")
+    logger.info(f"search_namespace: {search_namespace}")
+    logger.info(f"alpha: {alpha}")
+    logger.info(f"reranker_name: {reranker_name}")
+    logger.info(f"similarity_top_k: {similarity_top_k}")
+    logger.info(f"rerank_top_k: {rerank_top_k}")
+    logger.info(f"embedding_model: {embedding_model}")
+
     # Initialize the reranker based on the reranker name
     if reranker_name == "GPT-4":
         ranker = Reranker("jina", api_key=reranker_api_keys["GPT-4"])
@@ -133,13 +143,20 @@ def rerank(search_params: SearchParams, response: Response):
     else:
         raise HTTPException(status_code=400, detail=f"Unsupported reranker: {reranker_name}")
 
+    logger.info(f"Initialized reranker: {reranker_name}")
+
     # Initialize Pinecone client
     pinecone = Pinecone()
     pinecone.init(api_key=os.getenv('PINECONE_API_KEY'), environment=os.getenv('PINECONE_ENVIRONMENT'))
 
+    logger.info(f"Initialized Pinecone client")
+
     # Fetch the query vector from Pinecone
     query_response = pinecone.fetch(ids=[profile_id], namespace=query_namespace, index_name=index_name)
     query_vector = query_response['vectors'][profile_id]['values']
+
+    logger.info(f"Fetched query vector for profile_id: {profile_id}")
+    logger.info(f"Query vector length: {len(query_vector)}")
 
     # Perform the similarity search
     search_response = pinecone.query(

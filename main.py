@@ -54,11 +54,10 @@ class SearchParams(BaseModel):
     rerank_top_k: int = Field(..., description="The number of top results to return after reranking")
     embedding_model: str = Field(..., description="The embedding model used for similarity search")
 
+# Initialize Pinecone client
+pc = Pinecone(api_key="bb2dea00-df61-404e-9f29-5e40faee47c4")
 @app.post("/rerank", response_model=RerankResponse)
-async def rerank(search_params: SearchParams, response: Response):
-    # Initialize Pinecone client
-    pc = Pinecone(api_key="bb2dea00-df61-404e-9f29-5e40faee47c4")
-
+def rerank(search_params: SearchParams, response: Response):
     # Extract the search parameters from the request body
     profile_id = search_params.profile_id
     index_name = search_params.index_name

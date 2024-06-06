@@ -14,10 +14,6 @@ load_dotenv()
 
 app = FastAPI()
 
-# Set up logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger("fastapi")
-
 # Retrieve the API keys from environment variables
 cohere_api_key = os.getenv('COHERE_API_KEY')
 mixedbread_api_key = os.getenv('MIXEDBREAD_API_KEY')
@@ -47,8 +43,9 @@ reranker_api_keys = {
     'Opus 3': mixedbread_api_key
 }
 
-# Initialize Pinecone
-pc = Pinecone(api_key=os.getenv('PINECONE_API_KEY'), environment=os.getenv('PINECONE_ENV'))
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("fastapi")
 
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
@@ -58,6 +55,31 @@ async def log_requests(request: Request, call_next):
 
     response = await call_next(request)
     return response
+
+def hybrid_score_norm(dense, sparse, alpha: float):
+    """Hybrid score using a convex combination
+
+    alpha * dense + (1 - alpha) * sparse
+
+    Args:
+        dense: Array of floats representing
+        sparse: a dict of `indices` and `values`
+        alpha: scale between 0 and 1
+    """
+    if alpha < 0 or alpha > 1:
+        raise ValueError("Alpha must be between 0 and 1")
+    hs = {
+        'indices': sparse['indices'],
+        'values':  [v * (1 - alpha) for v in sparse['values']]
+    }
+    return [v * alpha for v in dense], hs
+
+class Document(BaseModel):
+    doc_id: str
+    text: str
+
+class RerankResponse(BaseModel):
+    reranked_documents: List[Document]
 
 class SearchParams(BaseModel):
     profile_id: str = Field(..., description="The profile ID to fetch the vector for")
@@ -69,12 +91,6 @@ class SearchParams(BaseModel):
     similarity_top_k: int = Field(..., description="The number of top results to retrieve from similarity search")
     rerank_top_k: int = Field(..., description="The number of top results to return after reranking")
     embedding_model: str = Field(..., description="The embedding model used for similarity search")
-    class Document(BaseModel):
-        doc_id: str
-        text: str
-
-    class RerankResponse(BaseModel):
-        reranked_documents: List[Document]
 
 @app.post("/rerank", response_model=RerankResponse)
 def rerank(search_params: SearchParams, response: Response):
@@ -109,43 +125,65 @@ def rerank(search_params: SearchParams, response: Response):
     else:
         raise HTTPException(status_code=400, detail=f"Unsupported reranker: {reranker_name}")
 
-    # Connect to the index
-    index = pc.Index(index_name)
+    # Initialize Pinecone client
+    pinecone = Pinecone()
+    pinecone.init(api_key=os.getenv('PINECONE_API_KEY'), environment=os.getenv('PINECONE_ENVIRONMENT'))
 
-    # Fetch the vector and metadata for the given profile_id
-    query_result = index.fetch(
-        ids=[profile_id],
-        namespace=query_namespace
-    )
-
-    if query_result.vectors:
-        query_vector = query_result.vectors[0]
-        query_metadata = query_result.metadata[0]
-        rerank_chunk = query_metadata['bio'] + query_metadata['nuance_chunk'] + query_metadata['psych_eval']
-    else:
-        raise HTTPException(status_code=404, detail=f"Profile with ID {profile_id} not found")
+    # Fetch the query vector from Pinecone
+    query_response = pinecone.fetch(ids=[profile_id], namespace=query_namespace, index_name=index_name)
+    query_vector = query_response['vectors'][profile_id]['values']
 
     # Perform the similarity search
-    search_results = index.query(
+    search_response = pinecone.query(
         vector=query_vector,
         top_k=similarity_top_k,
         include_metadata=True,
-        namespace=search_namespace
+        namespace=search_namespace,
+        index_name=index_name
     )
+
+    # Create a list to store the matches with hybrid scores and metadata
+    matches_with_hybrid_scores = []
+
+    for match in search_response.matches:
+        # Check if sparse_values are present in the match
+        if match.sparse_values:
+            # Calculate the sparse score manually
+            sparse_score = sum(match.sparse_values.values())
+            
+            # Calculate the hybrid score
+            hybrid_score = alpha * match.score + (1 - alpha) * sparse_score
+            
+            # Create a dictionary with the required metadata fields
+            match_data = {
+                'profile_id': match.metadata['profile_id'],
+                'first_name': match.metadata['first_name'],
+                'rerank_chunk': match.metadata['bio'] + match.metadata['nuance_chunk'] + match.metadata['psych_eval'],
+                'hybrid_score': hybrid_score
+            }
+            
+            # Add the match data to the list
+            matches_with_hybrid_scores.append(match_data)
+    
+    # Sort the matches based on the hybrid scores in descending order
+    matches_with_hybrid_scores.sort(key=lambda x: x['hybrid_score'], reverse=True)
+
+    # Extract the top-k matches for reranking
+    top_matches = matches_with_hybrid_scores[:rerank_top_k]
 
     # Prepare the documents for reranking
     documents = [
         Document(
-            doc_id=match.id,
-            text=match.metadata['bio'] + match.metadata['nuance_chunk'] + match.metadata['psych_eval']
+            doc_id=str(match['profile_id']),
+            text=match['rerank_chunk']
         )
-        for match in search_results.matches
+        for match in top_matches
     ]
 
     # Perform the reranking
-    reranked_results = ranker.rerank(
+    reranked_results = ranker.rank(
         query=rerank_chunk,
-        documents=documents,
+        docs=documents,
         top_k=rerank_top_k
     )
 

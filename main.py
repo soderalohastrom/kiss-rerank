@@ -1,11 +1,11 @@
-from fastapi import FastAPI, HTTPException, Response
+import logging
+from fastapi import FastAPI, Request, HTTPException, Response
 from pydantic import BaseModel, Field
 from typing import List
 import json
 from pprint import pprint
 from pinecone import Pinecone
 from rerankers import Reranker
-import logging
 from dotenv import load_dotenv
 import os
 
@@ -19,6 +19,29 @@ cohere_api_key = os.getenv('COHERE_API_KEY')
 mixedbread_api_key = os.getenv('MIXEDBREAD_API_KEY')
 jina_api_key = os.getenv('JINA_API_KEY')
 
+# Map reranker names to their corresponding API keys
+reranker_api_keys = {
+    'GPT-4': jina_api_key,
+    'Jina Rank': jina_api_key,
+    'Cohere': cohere_api_key,
+    'VoyageAI': cohere_api_key,
+    'Mixedbread': mixedbread_api_key,
+    'ColbertV2': mixedbread_api_key,
+    'Opus 3': mixedbread_api_key
+}
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("fastapi")
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    logger.info(f"Request: {request.method} {request.url}")
+    request_body = await request.body()
+    logger.info(f"Request Body: {request_body}")
+
+    response = await call_next(request)
+    return response
 # Map reranker names to their corresponding API keys
 reranker_api_keys = {
     'GPT-4': jina_api_key,
@@ -137,4 +160,3 @@ def rerank(search_params: SearchParams, response: Response):
     ]
 
     return RerankResponse(reranked_documents=reranked_documents)
-    

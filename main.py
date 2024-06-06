@@ -127,22 +127,30 @@ def rerank(search_params: SearchParams, response: Response):
 
     # Initialize the reranker based on the reranker name
     if reranker_name == "GPT-4":
+        ranker_string = f"jina, api_key={reranker_api_keys['GPT-4']}"
         ranker = Reranker("jina", api_key=reranker_api_keys["GPT-4"])
     elif reranker_name == "Jina Rank":
+        ranker_string = f"jina, api_key={reranker_api_keys['Jina Rank']}"
         ranker = Reranker("jina", api_key=reranker_api_keys["Jina Rank"])
     elif reranker_name == "Cohere":
+        ranker_string = f"cohere, api_key={reranker_api_keys['Cohere']}"
         ranker = Reranker("cohere", api_key=reranker_api_keys["Cohere"])
     elif reranker_name == "VoyageAI":
+        ranker_string = f"voyage, api_key={reranker_api_keys['VoyageAI']}"
         ranker = Reranker("voyage", api_key=reranker_api_keys["VoyageAI"])
     elif reranker_name == "Mixedbread":
+        ranker_string = f"mixedbread.ai, api_key={reranker_api_keys['Mixedbread']}"
         ranker = Reranker("mixedbread.ai", api_key=reranker_api_keys["Mixedbread"])
     elif reranker_name == "ColbertV2":
+        ranker_string = f"mixedbread.ai, api_key={reranker_api_keys['ColbertV2']}"
         ranker = Reranker("mixedbread.ai", api_key=reranker_api_keys["ColbertV2"])
     elif reranker_name == "Opus 3":
+        ranker_string = f"mixedbread.ai, api_key={reranker_api_keys['Opus 3']}"
         ranker = Reranker("mixedbread.ai", api_key=reranker_api_keys["Opus 3"])
     else:
         raise HTTPException(status_code=400, detail=f"Unsupported reranker: {reranker_name}")
 
+    logger.info(f"Reranker string: {ranker_string}")
     logger.info(f"Initialized reranker: {reranker_name}")
 
     # Initialize Pinecone client

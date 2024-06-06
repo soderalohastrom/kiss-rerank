@@ -14,6 +14,10 @@ load_dotenv()
 
 app = FastAPI()
 
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("fastapi")
+
 # Retrieve the API keys from environment variables
 cohere_api_key = os.getenv('COHERE_API_KEY')
 mixedbread_api_key = os.getenv('MIXEDBREAD_API_KEY')

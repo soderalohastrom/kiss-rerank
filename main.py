@@ -14,11 +14,28 @@ load_dotenv()
 
 app = FastAPI()
 
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("fastapi")
+
 # Retrieve the API keys from environment variables
 cohere_api_key = os.getenv('COHERE_API_KEY')
 mixedbread_api_key = os.getenv('MIXEDBREAD_API_KEY')
 jina_api_key = os.getenv('JINA_API_KEY')
 
+# Log the retrieved API keys
+logger.info(f"Cohere API Key: {cohere_api_key}")
+logger.info(f"Mixedbread API Key: {mixedbread_api_key}")
+logger.info(f"Jina API Key: {jina_api_key}")
+
+# Check if any API key is missing
+if not cohere_api_key:
+    logger.error("Cohere API Key is missing")
+if not mixedbread_api_key:
+    logger.error("Mixedbread API Key is missing")
+if not jina_api_key:
+    logger.error("Jina API Key is missing")
+
 # Map reranker names to their corresponding API keys
 reranker_api_keys = {
     'GPT-4': jina_api_key,
@@ -30,41 +47,17 @@ reranker_api_keys = {
     'Opus 3': mixedbread_api_key
 }
 
-# Set up logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger("fastapi")
+# Initialize Pinecone
+pc = Pinecone(api_key=os.getenv('PINECONE_API_KEY'), environment=os.getenv('PINECONE_ENV'))
 
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
     logger.info(f"Request: {request.method} {request.url}")
-    request_body = await request.body()
+    request_body = await request.json()
     logger.info(f"Request Body: {request_body}")
 
     response = await call_next(request)
     return response
-# Map reranker names to their corresponding API keys
-reranker_api_keys = {
-    'GPT-4': jina_api_key,
-    'Jina Rank': jina_api_key,
-    'Cohere': cohere_api_key,
-    'VoyageAI': cohere_api_key,
-    'Mixedbread': mixedbread_api_key,
-    'ColbertV2': mixedbread_api_key,
-    'Opus 3': mixedbread_api_key
-}
-
-# Configure logging
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
-
-app = FastAPI()
-
-class Document(BaseModel):
-    doc_id: int = Field(..., description="The unique ID of the document")
-    text: str = Field(..., description="The text of the document")
-
-class RerankResponse(BaseModel):
-    reranked_documents: List[Document] = Field(..., description="The reranked documents")
 
 class SearchParams(BaseModel):
     profile_id: str = Field(..., description="The profile ID to fetch the vector for")
@@ -77,10 +70,10 @@ class SearchParams(BaseModel):
     rerank_top_k: int = Field(..., description="The number of top results to return after reranking")
     embedding_model: str = Field(..., description="The embedding model used for similarity search")
 
-# Initialize Pinecone client
-pc = Pinecone(api_key="bb2dea00-df61-404e-9f29-5e40faee47c4")
 @app.post("/rerank", response_model=RerankResponse)
 def rerank(search_params: SearchParams, response: Response):
+    logger.info(f"Received search parameters: {search_params}")
+
     # Extract the search parameters from the request body
     profile_id = search_params.profile_id
     index_name = search_params.index_name

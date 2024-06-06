@@ -54,9 +54,13 @@ logger = logging.getLogger("fastapi")
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
     logger.info(f"Request: {request.method} {request.url}")
-    request_body = await request.json()
-    logger.info(f"Request Body: {request_body}")
-
+    
+    try:
+        request_body = await request.json()
+        logger.info(f"Request Body: {request_body}")
+    except json.JSONDecodeError:
+        logger.info("Empty or invalid JSON request body")
+    
     response = await call_next(request)
     return response
 

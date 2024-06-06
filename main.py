@@ -69,6 +69,12 @@ class SearchParams(BaseModel):
     similarity_top_k: int = Field(..., description="The number of top results to retrieve from similarity search")
     rerank_top_k: int = Field(..., description="The number of top results to return after reranking")
     embedding_model: str = Field(..., description="The embedding model used for similarity search")
+    class Document(BaseModel):
+        doc_id: str
+        text: str
+
+    class RerankResponse(BaseModel):
+        reranked_documents: List[Document]
 
 @app.post("/rerank", response_model=RerankResponse)
 def rerank(search_params: SearchParams, response: Response):
@@ -149,7 +155,7 @@ def rerank(search_params: SearchParams, response: Response):
             doc_id=doc.doc_id,
             text=doc.text
         )
-        for doc in reranked_results
+        for doc in reranked_results.results
     ]
 
     return RerankResponse(reranked_documents=reranked_documents)

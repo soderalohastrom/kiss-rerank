@@ -178,7 +178,6 @@ search_response = index.query(
 
 # Create a list to store the matches with hybrid scores and metadata
 matches_with_hybrid_scores = []
-
 for match in search_response.matches:
     # Check if sparse_values are present in the match
     if match.sparse_values:
@@ -218,13 +217,13 @@ reranked_results = ranker.rank(
     top_k=rerank_top_k
 )
 
-    # Prepare the response
-    reranked_documents = [
-        Document(
-            doc_id=doc.doc_id,
-            text=doc.text
-        )
-        for doc in reranked_results.results
-    ]
+# Prepare the response
+reranked_documents = [
+    Document(
+        doc_id=doc.doc_id,
+        text=doc.text
+    )
+    for doc in reranked_results.results
+]
 
-    return RerankResponse(reranked_documents=reranked_documents)
+return RerankResponse(reranked_documents=reranked_documents)

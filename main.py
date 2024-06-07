@@ -126,14 +126,14 @@ def rerank(search_params: SearchParams):
 
     # Initialize the reranker based on the reranker name
     if reranker_name == "jina":
-        ranker_string = f"jina, api_key={reranker_api_keys['GPT-4']}"
-        ranker = Reranker("jina", api_key=reranker_api_keys["GPT-4"])
+        ranker_string = f"jina, api_key={jina_api_key}"
+        ranker = Reranker("jina", api_key=jina_api_key)
     elif reranker_name == "cohere":
-        ranker_string = f"cohere, api_key={reranker_api_keys['Cohere']}"
-        ranker = Reranker("cohere", api_key=reranker_api_keys["Cohere"])
+        ranker_string = f"cohere, api_key={cohere_api_key}"
+        ranker = Reranker("cohere", api_key=cohere_api_key)
     elif reranker_name == "mixedbread.ai":
-        ranker_string = f"mixedbread.ai, api_key={reranker_api_keys['Mixedbread']}"
-        ranker = Reranker("mixedbread.ai", api_key=reranker_api_keys["Mixedbread"])
+        ranker_string = f"mixedbread.ai, api_key={mixedbread_api_key}"
+        ranker = Reranker("mixedbread.ai", api_key=mixedbread_api_key)
     else:
         raise HTTPException(status_code=400, detail=f"Unsupported reranker: {reranker_name}")
 

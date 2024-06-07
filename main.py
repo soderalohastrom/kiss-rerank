@@ -151,79 +151,79 @@ def rerank(search_params: SearchParams):
     logger.info(f"Initialized reranker: {reranker_name}")
 
 
-# Fetch the query vector from Pinecone
-query_response = index.fetch(
-    ids=[profile_id],
-    namespace=query_namespace
-)
-query_vector = query_response['vectors'][profile_id]['values']
-query_metadata = query_response['vectors'][profile_id]['metadata']
-
-logger.info(f"Fetched query vector for profile_id: {profile_id}")
-logger.info(f"Query vector length: {len(query_vector)}")
-logger.info(f"Query metadata: {query_metadata}")
-
-# Create the rerank_chunk from the query metadata
-rerank_chunk = query_metadata['bio'] + query_metadata['nuance_chunk'] + query_metadata['psych_eval']
-
-logger.info(f"Rerank chunk: {rerank_chunk}")
-
-# Perform the similarity search
-search_response = index.query(
-    vector=query_vector,
-    top_k=similarity_top_k,
-    include_metadata=True,
-    namespace=search_namespace
-)
-
-# Create a list to store the matches with hybrid scores and metadata
-matches_with_hybrid_scores = []
-for match in search_response.matches:
-    # Check if sparse_values are present in the match
-    if match.sparse_values:
-        # Calculate the sparse score manually
-        sparse_score = sum(match.sparse_values.values())
-        
-        # Calculate the hybrid score
-        hybrid_score = alpha * match.score + (1 - alpha) * sparse_score
-        
-        # Create a dictionary with the required metadata fields
-        match_data = {
-            'profile_id': match.metadata['profile_id'],
-            'first_name': match.metadata['first_name'],
-            'rerank_chunk': match.metadata['bio'] + match.metadata['nuance_chunk'] + match.metadata['psych_eval'],
-            'hybrid_score': hybrid_score
-        }
-        
-        # Add the match data to the list
-        matches_with_hybrid_scores.append(match_data)
-
-# Sort the matches based on the hybrid scores in descending order
-matches_with_hybrid_scores.sort(key=lambda x: x['hybrid_score'], reverse=True)
-
-# Prepare the documents for reranking
-documents = [
-    Document(
-        doc_id=match['profile_id'],
-        text=match['rerank_chunk']
+    # Fetch the query vector from Pinecone
+    query_response = index.fetch(
+        ids=[profile_id],
+        namespace=query_namespace
     )
-    for match in matches_with_hybrid_scores
-]
+    query_vector = query_response['vectors'][profile_id]['values']
+    query_metadata = query_response['vectors'][profile_id]['metadata']
 
-# Perform the reranking
-reranked_results = ranker.rank(
-    query=rerank_chunk,
-    docs=documents,
-    top_k=rerank_top_k
-)
+    logger.info(f"Fetched query vector for profile_id: {profile_id}")
+    logger.info(f"Query vector length: {len(query_vector)}")
+    logger.info(f"Query metadata: {query_metadata}")
 
-# Prepare the response
-reranked_documents = [
-    Document(
-        doc_id=doc.doc_id,
-        text=doc.text
+    # Create the rerank_chunk from the query metadata
+    rerank_chunk = query_metadata['bio'] + query_metadata['nuance_chunk'] + query_metadata['psych_eval']
+
+    logger.info(f"Rerank chunk: {rerank_chunk}")
+
+    # Perform the similarity search
+    search_response = index.query(
+        vector=query_vector,
+        top_k=similarity_top_k,
+        include_metadata=True,
+        namespace=search_namespace
     )
-    for doc in reranked_results.results
-]
 
-return RerankResponse(reranked_documents=reranked_documents)
+    # Create a list to store the matches with hybrid scores and metadata
+    matches_with_hybrid_scores = []
+    for match in search_response.matches:
+        # Check if sparse_values are present in the match
+        if match.sparse_values:
+            # Calculate the sparse score manually
+            sparse_score = sum(match.sparse_values.values())
+            
+            # Calculate the hybrid score
+            hybrid_score = alpha * match.score + (1 - alpha) * sparse_score
+            
+            # Create a dictionary with the required metadata fields
+            match_data = {
+                'profile_id': match.metadata['profile_id'],
+                'first_name': match.metadata['first_name'],
+                'rerank_chunk': match.metadata['bio'] + match.metadata['nuance_chunk'] + match.metadata['psych_eval'],
+                'hybrid_score': hybrid_score
+            }
+            
+            # Add the match data to the list
+            matches_with_hybrid_scores.append(match_data)
+
+    # Sort the matches based on the hybrid scores in descending order
+    matches_with_hybrid_scores.sort(key=lambda x: x['hybrid_score'], reverse=True)
+
+    # Prepare the documents for reranking
+    documents = [
+        Document(
+            doc_id=match['profile_id'],
+            text=match['rerank_chunk']
+        )
+        for match in matches_with_hybrid_scores
+    ]
+
+    # Perform the reranking
+    reranked_results = ranker.rank(
+        query=rerank_chunk,
+        docs=documents,
+        top_k=rerank_top_k
+    )
+
+    # Prepare the response
+    reranked_documents = [
+        Document(
+            doc_id=doc.doc_id,
+            text=doc.text
+        )
+        for doc in reranked_results.results
+    ]
+
+    return RerankResponse(reranked_documents=reranked_documents)

@@ -18,6 +18,7 @@ app = FastAPI()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("fastapi")
 
+
 # Retrieve the API keys from environment variables
 cohere_api_key = os.getenv('COHERE_API_KEY')
 mixedbread_api_key = os.getenv('MIXEDBREAD_API_KEY')
@@ -38,13 +39,9 @@ if not jina_api_key:
 
 # Map reranker names to their corresponding API keys
 reranker_api_keys = {
-    # 'GPT-4': jina_api_key,
     'jina': jina_api_key,
     'cohere': cohere_api_key,
-    # 'VoyageAI': cohere_api_key,
-    'mixedbread.ai': mixedbread_api_key,
-    # 'ColbertV2': mixedbread_api_key,
-    # 'Opus 3': mixedbread_api_key
+    'mixedbread.ai': mixedbread_api_key
 }
 
 # Set up logging
@@ -88,16 +85,6 @@ class SearchParams(BaseModel):
     rerank_top_k: int = Field(..., description="The number of top results to return after reranking")
     embedding_model: str = Field(..., description="The embedding model used for similarity search")
 
-@app.middleware("http")
-async def log_requests(request: Request, call_next):
-    logger.info(f"Request: {request.method} {request.url}")
-    try:
-        request_body = await request.json()
-        logger.info(f"Request Body: {request_body}")
-    except json.JSONDecodeError:
-        logger.info("Empty or invalid JSON request body")
-    response = await call_next(request)
-    return response
 
 @app.post("/rerank", response_model=RerankResponse)
 def rerank(search_params: SearchParams):

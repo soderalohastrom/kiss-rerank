@@ -129,24 +129,12 @@ def rerank(search_params: SearchParams, response: Response):
     if reranker_name == "jina":
         ranker_string = f"jina, api_key={reranker_api_keys['GPT-4']}"
         ranker = Reranker("jina", api_key=reranker_api_keys["GPT-4"])
-    # elif reranker_name == "GPT-4":
-    #     ranker_string = f"jina, api_key={reranker_api_keys['Jina Rank']}"
-    #     ranker = Reranker("jina", api_key=reranker_api_keys["Jina Rank"])
     elif reranker_name == "cohere":
         ranker_string = f"cohere, api_key={reranker_api_keys['Cohere']}"
         ranker = Reranker("cohere", api_key=reranker_api_keys["Cohere"])
-    # elif reranker_name == "VoyageAI":
-    #     ranker_string = f"voyage, api_key={reranker_api_keys['VoyageAI']}"
-        # ranker = Reranker("voyage", api_key=reranker_api_keys["VoyageAI"])
     elif reranker_name == "mixedbread.ai":
         ranker_string = f"mixedbread.ai, api_key={reranker_api_keys['Mixedbread']}"
         ranker = Reranker("mixedbread.ai", api_key=reranker_api_keys["Mixedbread"])
-    # elif reranker_name == "ColbertV2":
-    #     ranker_string = f"mixedbread.ai, api_key={reranker_api_keys['ColbertV2']}"
-    #     ranker = Reranker("mixedbread.ai", api_key=reranker_api_keys["ColbertV2"])
-    # elif reranker_name == "Opus 3":
-        # ranker_string = f"mixedbread.ai, api_key={reranker_api_keys['Opus 3']}"
-        # ranker = Reranker("mixedbread.ai", api_key=reranker_api_keys["Opus 3"])
     else:
         raise HTTPException(status_code=400, detail=f"Unsupported reranker: {reranker_name}")
 

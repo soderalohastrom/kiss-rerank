@@ -124,6 +124,12 @@ def rerank(search_params: SearchParams):
     logger.info(f"rerank_top_k: {rerank_top_k}")
     logger.info(f"embedding_model: {embedding_model}")
 
+    # Initialize Pinecone client
+    pinecone = Pinecone(api_key=os.getenv('PINECONE_API_KEY'))
+
+    # Connect to the index
+    index = pinecone.Index(index_name)
+
     # Add a check for profile_id
     if not profile_id:
         logger.error("profile_id is missing!")
@@ -144,26 +150,23 @@ def rerank(search_params: SearchParams):
     logger.info(f"Reranker string: {ranker_string}")
     logger.info(f"Initialized reranker: {reranker_name}")
 
-    # Initialize Pinecone client
-    pinecone = Pinecone()
-    pinecone.init(api_key=os.getenv('PINECONE_API_KEY'), environment=os.getenv('PINECONE_ENVIRONMENT'))
-
-    logger.info(f"Initialized Pinecone client")
 
     # Fetch the query vector from Pinecone
-    query_response = pinecone.fetch(ids=[profile_id], namespace=query_namespace, index_name=index_name)
+    query_response = index.fetch(
+        ids=[profile_id],
+        namespace=query_namespace
+    )
     query_vector = query_response['vectors'][profile_id]['values']
 
     logger.info(f"Fetched query vector for profile_id: {profile_id}")
     logger.info(f"Query vector length: {len(query_vector)}")
 
     # Perform the similarity search
-    search_response = pinecone.query(
+    search_response = index.query(
         vector=query_vector,
         top_k=similarity_top_k,
         include_metadata=True,
-        namespace=search_namespace,
-        index_name=index_name
+        namespace=search_namespace
     )
 
     # Create a list to store the matches with hybrid scores and metadata

@@ -87,6 +87,18 @@ class SearchParams(BaseModel):
     similarity_top_k: int = Field(..., description="The number of top results to retrieve from similarity search")
     rerank_top_k: int = Field(..., description="The number of top results to return after reranking")
     embedding_model: str = Field(..., description="The embedding model used for similarity search")
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    logger.info(f"Request: {request.method} {request.url}")
+    try:
+        request_body = await request.json()
+        logger.info(f"Request Body: {request_body}")
+    except json.JSONDecodeError:
+        logger.info("Empty or invalid JSON request body")
+    response = await call_next(request)
+    return response
+
 @app.post("/rerank", response_model=RerankResponse)
 def rerank(search_params: SearchParams):
     logger.info(f"Received search parameters: {search_params}")
@@ -108,7 +120,15 @@ def rerank(search_params: SearchParams):
     logger.info(f"search_namespace: {search_namespace}")
     logger.info(f"alpha: {alpha}")
     logger.info(f"reranker_name: {reranker_name}")
-    # Initialize the reranker based on the reranker name
+    logger.info(f"similarity_top_k: {similarity_top_k}")
+    logger.info(f"rerank_top_k: {rerank_top_k}")
+    logger.info(f"embedding_model: {embedding_model}")
+
+    # Add a check for profile_id
+    if not profile_id:
+        logger.error("profile_id is missing!")
+        raise HTTPException(status_code=422, detail="profile_id is required")
+
     if reranker_name == "jina":
         ranker_string = f"jina, api_key={jina_api_key}"
         ranker = Reranker("jina", api_key=jina_api_key)

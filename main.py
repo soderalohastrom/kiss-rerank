@@ -101,9 +101,8 @@ class SearchParams(BaseModel):
     embedding_model: str = Field(..., description="The embedding model used for similarity search")
 
 @app.post("/rerank", response_model=RerankResponse)
-def rerank(search_params: SearchParams, response: Response):
+def rerank(search_params: SearchParams): 
     logger.info(f"Received search parameters: {search_params}")
-
     # Extract the search parameters from the request body
     profile_id = search_params.profile_id
     index_name = search_params.index_name

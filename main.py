@@ -51,18 +51,6 @@ reranker_api_keys = {
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("fastapi")
 
-@app.middleware("http")
-async def log_requests(request: Request, call_next):
-    logger.info(f"Request: {request.method} {request.url}")
-    
-    try:
-        request_body = await request.json()
-        logger.info(f"Request Body: {request_body}")
-    except json.JSONDecodeError:
-        logger.info("Empty or invalid JSON request body")
-    
-    response = await call_next(request)
-    return response
 
 def hybrid_score_norm(dense, sparse, alpha: float):
     """Hybrid score using a convex combination
@@ -99,11 +87,11 @@ class SearchParams(BaseModel):
     similarity_top_k: int = Field(..., description="The number of top results to retrieve from similarity search")
     rerank_top_k: int = Field(..., description="The number of top results to return after reranking")
     embedding_model: str = Field(..., description="The embedding model used for similarity search")
-
 @app.post("/rerank", response_model=RerankResponse)
-def rerank(search_params: SearchParams): 
+def rerank(search_params: SearchParams):
     logger.info(f"Received search parameters: {search_params}")
-    # Extract the search parameters from the request body
+    
+    # Extract the search parameters from the search_params object
     profile_id = search_params.profile_id
     index_name = search_params.index_name
     query_namespace = search_params.query_namespace
@@ -120,10 +108,6 @@ def rerank(search_params: SearchParams):
     logger.info(f"search_namespace: {search_namespace}")
     logger.info(f"alpha: {alpha}")
     logger.info(f"reranker_name: {reranker_name}")
-    logger.info(f"similarity_top_k: {similarity_top_k}")
-    logger.info(f"rerank_top_k: {rerank_top_k}")
-    logger.info(f"embedding_model: {embedding_model}")
-
     # Initialize the reranker based on the reranker name
     if reranker_name == "jina":
         ranker_string = f"jina, api_key={jina_api_key}"

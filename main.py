@@ -12,7 +12,7 @@ import os
 # Load environment variables from .env file
 load_dotenv()
 
-app = FastAPI()
+app = FastAPI(response_class=JSONResponse)
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -80,7 +80,7 @@ class SearchParams(BaseModel):
     query_namespace: str = Field(..., description="The namespace for the query vector")
     search_namespace: str = Field(..., description="The namespace for the search vectors")
     alpha: float = Field(..., description="The weight for the dense vector in the hybrid score")
-    reranker: str = Field(..., description="The JSON-encoded reranker configuration")
+    reranker: dict = Field(..., description="The reranker configuration")
     similarity_top_k: int = Field(..., description="The number of top results to retrieve from similarity search")
     rerank_top_k: int = Field(..., description="The number of top results to return after reranking")
     embedding_model: str = Field(..., description="The embedding model used for similarity search")
@@ -122,21 +122,14 @@ def rerank(search_params: SearchParams):
         logger.error("profile_id is missing!")
         raise HTTPException(status_code=422, detail="profile_id is required")
 
-    if reranker_name == "jina":
-        ranker_string = f"jina, api_key={jina_api_key}"
-        ranker = Reranker("jina", api_key=jina_api_key)
-    elif reranker_name == "cohere":
-        ranker_string = f"cohere, api_key={cohere_api_key}"
-        ranker = Reranker("cohere", api_key=cohere_api_key)
-    elif reranker_name == "mixedbread.ai":
-        ranker_string = f"mixedbread.ai, api_key={mixedbread_api_key}"
-        ranker = Reranker("mixedbread.ai", api_key=mixedbread_api_key)
+    reranker_config = search_params.reranker
+    reranker_name = reranker_config.get("name")
+    
+    if reranker_name in reranker_api_keys:
+        reranker_api_key = reranker_api_keys[reranker_name]
+        ranker = Reranker(reranker_name, api_key=reranker_api_key)
     else:
         raise HTTPException(status_code=400, detail=f"Unsupported reranker: {reranker_name}")
-
-    logger.info(f"Reranker string: {ranker_string}")
-    logger.info(f"Initialized reranker: {reranker_name}")
-
 
     # Fetch the query vector from Pinecone
     query_response = index.fetch(

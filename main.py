@@ -5,7 +5,7 @@ from typing import List
 import json
 from pprint import pprint
 from pinecone import Pinecone
-from rerankers import Reranker, Document as RerankerDocument
+from rerankers import Reranker
 from dotenv import load_dotenv
 import os
 
@@ -123,15 +123,20 @@ def rerank(search_params: SearchParams):
         raise HTTPException(status_code=422, detail="profile_id is required")
 
     if reranker_name == "jina":
+        ranker_string = f"jina, api_key={jina_api_key}"
         ranker = Reranker("jina", api_key=jina_api_key)
     elif reranker_name == "cohere":
+        ranker_string = f"cohere, api_key={cohere_api_key}"
         ranker = Reranker("cohere", api_key=cohere_api_key)
     elif reranker_name == "mixedbread.ai":
+        ranker_string = f"mixedbread.ai, api_key={mixedbread_api_key}"
         ranker = Reranker("mixedbread.ai", api_key=mixedbread_api_key)
     else:
         raise HTTPException(status_code=400, detail=f"Unsupported reranker: {reranker_name}")
 
+    logger.info(f"Reranker string: {ranker_string}")
     logger.info(f"Initialized reranker: {reranker_name}")
+
 
     # Fetch the query vector from Pinecone
     query_response = index.fetch(
@@ -161,25 +166,33 @@ def rerank(search_params: SearchParams):
     # Create a list to store the matches with hybrid scores and metadata
     matches_with_hybrid_scores = []
     for match in search_response.matches:
+        # Check if sparse_values are present in the match
         if match.sparse_values:
+            # Calculate the sparse score manually
             sparse_score = sum(match.sparse_values.values())
+            
+            # Calculate the hybrid score
             hybrid_score = alpha * match.score + (1 - alpha) * sparse_score
+            
+            # Create a dictionary with the required metadata fields
             match_data = {
                 'profile_id': match.metadata['profile_id'],
                 'first_name': match.metadata['first_name'],
                 'rerank_chunk': match.metadata['bio'] + match.metadata['nuance_chunk'] + match.metadata['psych_eval'],
                 'hybrid_score': hybrid_score
             }
+            
+            # Add the match data to the list
             matches_with_hybrid_scores.append(match_data)
 
+    # Sort the matches based on the hybrid scores in descending order
     matches_with_hybrid_scores.sort(key=lambda x: x['hybrid_score'], reverse=True)
 
     # Prepare the documents for reranking
     documents = [
-        RerankerDocument(
+        Document(
             doc_id=match['profile_id'],
-            text=match['rerank_chunk'],
-            metadata={'first_name': match['first_name']}
+            text=match['rerank_chunk']
         )
         for match in matches_with_hybrid_scores
     ]

@@ -11,7 +11,7 @@ app = FastAPI()
 
 class SearchParams(BaseModel):
     profile_id: str = Field(..., description="The profile ID to fetch the vector for")
-    index_host: str = Field(..., description="The host of the Pinecone index")
+    index_name: str = Field(..., description="The name of the Pinecone index")
     query_namespace: str = Field(..., description="The namespace for the query vector")
     search_namespace: str = Field(..., description="The namespace for the search vectors")
     alpha: float = Field(..., description="The weight for the dense vector in the hybrid score")
@@ -25,25 +25,22 @@ def search(search_params: SearchParams):
     # Initialize Pinecone client
     pinecone = Pinecone(api_key=os.getenv('PINECONE_API_KEY'))
 
-    # Find your index host by calling describe_index through the Pinecone web console
-    index = pinecone.Index(host=search_params.index_host)
+    # Connect to the index
+    index = pinecone.Index(search_params.index_name)
 
-    # Query the index based on the given vector ID and return both metadata and vectors
-    query_response = index.query(
-        id=search_params.profile_id,
-        namespace=search_params.query_namespace,
-        include_metadata=True,
-        top_k=search_params.similarity_top_k,
-        include_values=True
+    # Fetch the vector and metadata based on the given ID and namespace
+    fetch_response = index.fetch(
+        ids=[search_params.profile_id],
+        namespace=search_params.query_namespace
     )
 
-    # Extract the query vector and metadata from the query response
-    query_vector = query_response['matches'][0]['values']
-    query_metadata = query_response['matches'][0]['metadata']
+    # Extract the vector and metadata from the fetch response
+    vector = fetch_response['vectors'][search_params.profile_id]['values']
+    metadata = fetch_response['vectors'][search_params.profile_id].get('metadata', {})
 
-    # Add the query vector and metadata to the search_params
+    # Add the vector and metadata to the search_params
     search_params_dict = search_params.dict()
-    search_params_dict['query_vector'] = query_vector
-    search_params_dict['query_metadata'] = query_metadata
+    search_params_dict['vector'] = vector
+    search_params_dict['metadata'] = metadata
 
     return search_params_dict

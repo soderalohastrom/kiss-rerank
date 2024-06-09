@@ -1,11 +1,7 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 from pinecone import Pinecone
-from dotenv import load_dotenv
-import os
-
-# Load environment variables from .env file
-load_dotenv()
+from fastapi import Response
 
 app = FastAPI()
 
@@ -20,27 +16,46 @@ class SearchParams(BaseModel):
     rerank_top_k: int = Field(..., description="The number of top results to return after reranking")
     embedding_model: str = Field(..., description="The embedding model used for similarity search")
 
-@app.post("/search")
-def search(search_params: SearchParams):
-    # Initialize Pinecone client
-    pinecone = Pinecone(api_key=os.getenv('PINECONE_API_KEY'))
+class SearchResponse(BaseModel):
+    search_params: dict
+    vector: list
+    metadata: dict
 
-    # Connect to the index
-    index = pinecone.Index(search_params.index_name)
+@app.post("/search", response_model=SearchResponse)
+async def search_documents(search_params: SearchParams, response: Response):
+    try:
+        # Initialize Pinecone client
+        pc = Pinecone(api_key="bb2dea00-df61-404e-9f29-5e40faee47c4")
 
-    # Fetch the vector and metadata based on the given ID and namespace
-    fetch_response = index.fetch(
-        ids=[search_params.profile_id],
-        namespace=search_params.query_namespace
-    )
+        # Extract the search parameters from the request body
+        profile_id = search_params.profile_id
+        index_name = search_params.index_name
+        query_namespace = search_params.query_namespace
+        search_namespace = search_params.search_namespace
 
-    # Extract the vector and metadata from the fetch response
-    vector = fetch_response['vectors'][search_params.profile_id]['values']
-    metadata = fetch_response['vectors'][search_params.profile_id].get('metadata', {})
+        # Connect to the index
+        index = pc.Index(index_name)
 
-    # Add the vector and metadata to the search_params
-    search_params_dict = search_params.dict()
-    search_params_dict['vector'] = vector
-    search_params_dict['metadata'] = metadata
+        # Fetch the vector with the specified profile_id from the query namespace
+        query_response = index.fetch(
+            ids=[profile_id],
+            namespace=query_namespace
+        )
 
-    return search_params_dict
+        # Check if the query response contains the requested vector
+        if profile_id not in query_response.vectors:
+            raise HTTPException(status_code=404, detail=f"No vector found with profile_id {profile_id} in namespace {query_namespace}")
+
+        # Extract the vector and metadata from the query response
+        vector = query_response.vectors[profile_id].values
+        metadata = query_response.vectors[profile_id].metadata
+
+        # Add the vector and metadata to the search_params
+        search_params_dict = search_params.dict()
+        search_params_dict['vector'] = vector
+        search_params_dict['metadata'] = metadata
+
+        return SearchResponse(search_params=search_params_dict, vector=vector, metadata=metadata)
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        raise

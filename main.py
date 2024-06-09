@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from pinecone import Pinecone
 from dotenv import load_dotenv
@@ -13,6 +13,11 @@ class FetchParams(BaseModel):
     ids: str
     index: str
     namespace: str
+
+class FetchedVector(BaseModel):
+    id: str
+    metadata: dict
+    values: list
 
 @app.post("/fetch")
 def fetch_vectors(fetch_params: FetchParams):
@@ -29,7 +34,18 @@ def fetch_vectors(fetch_params: FetchParams):
             namespace=fetch_params.namespace
         )
 
-        return fetch_response
+        # Check if the fetch response contains the requested vector
+        if fetch_params.ids not in fetch_response.vectors:
+            raise HTTPException(status_code=404, detail=f"No vector found with ID {fetch_params.ids} in namespace {fetch_params.namespace}")
+
+        # Create a FetchedVector instance with the necessary data
+        fetched_vector = FetchedVector(
+            id=fetch_params.ids,
+            metadata=fetch_response.vectors[fetch_params.ids].metadata,
+            values=fetch_response.vectors[fetch_params.ids].values,
+        )
+
+        return fetched_vector
     except Exception as e:
         print(f"Error: {str(e)}")
         raise

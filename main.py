@@ -6,29 +6,7 @@ from pprint import pprint
 from pinecone import Pinecone
 from rerankers import Reranker
 import logging
-from dotenv import load_dotenv
-import os
 
-# Load environment variables from .env file
-load_dotenv()
-
-app = FastAPI()
-
-# Retrieve the API keys from environment variables
-cohere_api_key = os.getenv('COHERE_API_KEY')
-mixedbread_api_key = os.getenv('MIXEDBREAD_API_KEY')
-jina_api_key = os.getenv('JINA_API_KEY')
-
-# Map reranker names to their corresponding API keys
-reranker_api_keys = {
-    'GPT-4': jina_api_key,
-    'Jina Rank': jina_api_key,
-    'Cohere': cohere_api_key,
-    'VoyageAI': cohere_api_key,
-    'Mixedbread': mixedbread_api_key,
-    'ColbertV2': mixedbread_api_key,
-    'Opus 3': mixedbread_api_key
-}
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -79,7 +57,7 @@ class CustomJSONEncoder(json.JSONEncoder):
         return encoded.replace(',', '\054')
 
 @app.post("/rerank", response_model=RerankResponse)
-async def rerank(rerank_request: RerankRequest, search_params: SearchParams, response: Response):
+async def rerank_documents(search_params: SearchParams, rerank_request: RerankRequest, response: Response):
     # Initialize Pinecone client
     pc = Pinecone(api_key="bb2dea00-df61-404e-9f29-5e40faee47c4")
 
@@ -89,27 +67,21 @@ async def rerank(rerank_request: RerankRequest, search_params: SearchParams, res
     query_namespace = search_params.query_namespace
     search_namespace = search_params.search_namespace
     alpha = search_params.alpha
-    reranker_name = search_params.reranker
-    top_k = search_params.top_k
-    embedding_model = search_params.embedding_model
+    # Parse the JSON-encoded reranker configuration
+    reranker_config = json.loads(search_params.reranker)
+    reranker_name = reranker_config['name']
 
-    # Initialize the reranker based on the reranker name
-    if reranker_name == "GPT-4":
-        ranker = Reranker("jina", api_key=reranker_api_keys["GPT-4"])
-    elif reranker_name == "Jina Rank":
-        ranker = Reranker("jina", api_key=reranker_api_keys["Jina Rank"])
-    elif reranker_name == "Cohere":
-        ranker = Reranker("cohere", api_key=reranker_api_keys["Cohere"])
-    elif reranker_name == "VoyageAI":
-        ranker = Reranker("voyage", api_key=reranker_api_keys["VoyageAI"])
-    elif reranker_name == "Mixedbread":
-        ranker = Reranker("mixedbread.ai", api_key=reranker_api_keys["Mixedbread"])
-    elif reranker_name == "ColbertV2":
-        ranker = Reranker("mixedbread.ai", api_key=reranker_api_keys["ColbertV2"])
-    elif reranker_name == "Opus 3":
-        ranker = Reranker("mixedbread.ai", api_key=reranker_api_keys["Opus 3"])
+    # Initialize the reranker based on the parsed configuration
+    if reranker_name == "jina":
+        ranker = Reranker("jina", api_key=reranker_config['api_key'])
+    elif reranker_name == "cohere":
+        ranker = Reranker("cohere", lang=reranker_config['lang'], api_key=reranker_config['api_key'])
+    elif reranker_name == "voyage":
+        ranker = Reranker("voyage", api_key=reranker_config['api_key'])
+    elif reranker_name == "mixedbread.ai":
+        ranker = Reranker("mixedbread.ai", api_key=reranker_config['api_key'])
     else:
-        raise HTTPException(status_code=400, detail=f"Unsupported reranker: {reranker_name}")
+        raise ValueError(f"Unsupported reranker: {reranker_name}")
 
     # Connect to the index
     index = pc.Index(index_name)
@@ -206,32 +178,17 @@ async def rerank(rerank_request: RerankRequest, search_params: SearchParams, res
         'hybrid-alpha-mix': search_params.alpha,
         'reranker-model': search_params.reranker,
         'final-results-size': len(top_reranked_documents)
-    })
+    }, cls=CustomJSONEncoder)
 
-    # Set the cookie in the response
     response.set_cookie(
         key="kiss_settings",
-        value=json.dumps({
-            'similarity-net-size': search_params.top_k,
-            'embedding-model': search_params.embedding_model,
-            'hybrid-alpha-mix': search_params.alpha,
-            'reranker-model': search_params.reranker,
-            'final-results-size': len(top_reranked_documents)
-        }),
+        value=cookie_value,
         max_age=3600,
         path="/",
         domain="kiss-qa.kelleher-international.com",
         secure=False,
         httponly=False
     )
-
-    return RerankResponse(
-        query=rerank_request.query,
-        reranked_documents=top_reranked_documents
-    )
-    
-    # Print the cookie value for debugging
-    print("Cookie Value (main.py):", cookie_value)
 
     # Log the cookie value
     logger.debug(f"Cookie value: {cookie_value}")

@@ -1,7 +1,8 @@
 from fastapi import FastAPI
-from pydantic import BaseModel, Field
-from rerankers import Reranker
-from typing import List
+from pydantic import BaseModel
+from typing import List, Any
+from rerankers import Reranker, Document
+
 
 ranker = Reranker("jina", api_key = 'jina_bf5ea4fa09d94000b6ac739ac8c03e6abDa7EGRVPAcmEmUI4CV1rv9efZnk')
 
@@ -9,10 +10,10 @@ app = FastAPI()
 
 class RerankRequest(BaseModel):
     query: str
-    documents: List[Dict[str, Any]]
+    documents: List[dict]
 
 class RerankResponse(BaseModel):
-    reranked_documents: List[Dict[str, Any]]
+    reranked_documents: List[dict]
 
 @app.post("/rerank", response_model=RerankResponse)
 async def rerank(request: RerankRequest):

@@ -3,7 +3,6 @@ from pydantic import BaseModel
 from typing import List, Any
 from rerankers import Reranker, Document
 
-
 ranker = Reranker("jina", model_type="api", api_key='jina_bf5ea4fa09d94000b6ac739ac8c03e6abDa7EGRVPAcmEmUI4CV1rv9efZnk')
 app = FastAPI()
 
@@ -26,7 +25,6 @@ async def rerank(request: RerankRequest):
         for doc in request.documents
     ]
 
-    ranker = Reranker()
     results = ranker.rank(query=query, docs=documents)
 
     reranked_documents = [

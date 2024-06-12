@@ -4,8 +4,7 @@ from typing import List, Any
 from rerankers import Reranker, Document
 
 
-ranker = Reranker("jina", api_key = 'jina_bf5ea4fa09d94000b6ac739ac8c03e6abDa7EGRVPAcmEmUI4CV1rv9efZnk')
-
+ranker = Reranker("jina", model_type="api", api_key='jina_bf5ea4fa09d94000b6ac739ac8c03e6abDa7EGRVPAcmEmUI4CV1rv9efZnk')
 app = FastAPI()
 
 class RerankRequest(BaseModel):

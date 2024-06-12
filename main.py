@@ -20,7 +20,7 @@ async def rerank(request: RerankRequest):
     query = request.query
     documents = [
         Document(
-            text=doc["text"],
+            text=doc["text"] if doc.get("text") else "",
             doc_id=doc["doc_id"],
             metadata=doc.get("metadata", {})
         )

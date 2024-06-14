@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from typing import List, Any
 from rerankers import Reranker, Document
 
-ranker = Reranker("jina", model_type="api", api_key='jina_bf5ea4fa09d94000b6ac739ac8c03e6abDa7EGRVPAcmEmUI4CV1rv9efZnk')
+ranker = Reranker("mixedbread.ai", model_type="api", api_key='emb_8aa8d8641e35bc38f79cd38ba825f8972c7d4ccb9a270155')
 app = FastAPI()
 
 class RerankRequest(BaseModel):

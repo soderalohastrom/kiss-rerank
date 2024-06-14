@@ -28,7 +28,9 @@ reranker_api_keys = {
     'cohere': cohere_api_key,
     'mixedbread.ai': mixedbread_api_key
 }
-ranker = Reranker("jina", model_type="api", api_key=jina_api_key)
+
+ranker = Reranker("jina", model_type="api", api_key='jina_bf5ea4fa09d94000b6ac739ac8c03e6abDa7EGRVPAcmEmUI4CV1rv9efZnk')
+app = FastAPI()
 
 class RerankRequest(BaseModel):
     query: str

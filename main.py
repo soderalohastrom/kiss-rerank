@@ -4,7 +4,6 @@ from pydantic import BaseModel, Field
 from typing import List
 import json
 from pprint import pprint
-from pinecone import Pinecone
 from rerankers import Reranker
 from dotenv import load_dotenv
 import os

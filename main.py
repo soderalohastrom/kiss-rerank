@@ -22,7 +22,7 @@ reranker_api_keys = {
     'mixedbread.ai': mixedbread_api_key
 }
 
-# Initialize the ranker with the desired API key
+# Initialize the ranker with the Jina API key
 ranker = Reranker("mixedbread.ai", model_type="api", api_key=mixedbread_api_key)
 
 class RerankRequest(BaseModel):

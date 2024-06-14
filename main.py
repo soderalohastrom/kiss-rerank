@@ -1,10 +1,7 @@
-import logging
-from fastapi import FastAPI, Request, HTTPException, Response
-from pydantic import BaseModel, Field
-from typing import List
-import json
-from pprint import pprint
-from rerankers import Reranker
+from fastapi import FastAPI
+from pydantic import BaseModel
+from typing import List, Any
+from rerankers import Reranker, Document
 from dotenv import load_dotenv
 import os
 
@@ -12,10 +9,6 @@ import os
 load_dotenv()
 
 app = FastAPI()
-
-# Set up logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger("fastapi")
 
 # Retrieve the API keys from environment variables
 cohere_api_key = os.getenv('COHERE_API_KEY')

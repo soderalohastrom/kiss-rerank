@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 from typing import List, Any
-from rerankers import Reranker, Document
+from rerankers import Reranker
 from dotenv import load_dotenv
 import os
 

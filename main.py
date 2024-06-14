@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 from typing import List, Any
-from rerankers import Reranker
+from rerankers import Reranker, Document
 from dotenv import load_dotenv
 import os
 
@@ -10,8 +10,8 @@ load_dotenv()
 
 app = FastAPI()
 
-ranker = Reranker("rankgpt", model_type = "rankgpt", api_key = os.getenv('OPENAI_API_KEY'))
-# ranker = Reranker("claude-3-opus-20240229", model_type = "rankgpt", api_key = os.getenv('ANTHROPIC_API_KEY'))
+# ranker = Reranker("rankgpt", model_type = "rankgpt", api_key = os.getenv('OPENAI_API_KEY'))
+ranker = Reranker("claude-3-opus-20240229", model_type = "rankgpt", api_key = os.getenv('ANTHROPIC_API_KEY'))
 
 class RerankRequest(BaseModel):
     query: str

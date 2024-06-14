@@ -22,7 +22,7 @@ reranker_api_keys = {
     'mixedbread.ai': mixedbread_api_key
 }
 
-# Initialize the ranker with the desired API key
+# Initialize the ranker with the Jina API key
 ranker = Reranker("cohere", model_type="api", api_key=cohere_api_key)
 
 class RerankRequest(BaseModel):

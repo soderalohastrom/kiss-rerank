@@ -11,13 +11,13 @@ load_dotenv()
 app = FastAPI()
 
 # RankLLM with default GPT (GPT-4o)
-# ranker = Reranker("rankllm", model_type="rankllm", api_key = os.getenv('OPENAI_API_KEY'))
+ranker = Reranker("rankllm", model_type="rankllm", api_key = os.getenv('OPENAI_API_KEY'))
 
 # # RankLLM with specified GPT models
 # ranker = Reranker('gpt-4-turbo', model_type="rankllm", api_key = os.getenv('OPENAI_API_KEY'))
 
 # # EXPERIMENTAL: RankLLM with RankZephyr
-ranker = Reranker('rankzephyr', model_type="rankllm")
+# ranker = Reranker('rankzephyr', model_type="rankllm")
 
 class RerankRequest(BaseModel):
     query: str

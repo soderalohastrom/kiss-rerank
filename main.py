@@ -1,39 +1,63 @@
-from fastapi import FastAPI
+import logging
+from fastapi import FastAPI, Request, HTTPException, Response
 from pydantic import BaseModel, Field
-from rerankers import Reranker
 from typing import List
-import os
+import json
+from pprint import pprint
+from pinecone import Pinecone
+from rerankers import Reranker
 from dotenv import load_dotenv
+import os
 
+# Load environment variables from .env file
 load_dotenv()
 
-# openai_api_key = os.getenv("OPENAI_API_KEY")
+app = FastAPI()
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("fastapi")
 
 app = FastAPI()
-ranker = Reranker("rankllm", api_key = os.getenv('OPENAI_API_KEY'))
 
-class Document(BaseModel):
-    doc_id: int = Field(..., description="The unique ID of the document")
-    text: str = Field(..., description="The text of the document")
+# RankLLM with default GPT (GPT-4o)
+ranker = Reranker("rankllm", model_type="rankllm", api_key = os.getenv('OPENAI_API_KEY'))
+
+# # RankLLM with specified GPT models
+# ranker = Reranker('gpt-4-turbo', model_type="rankllm", api_key = os.getenv('OPENAI_API_KEY'))
+
+# # EXPERIMENTAL: RankLLM with RankZephyr
+# ranker = Reranker("rankllm", api_key = os.getenv('OPENAI_API_KEY'))
 
 class RerankRequest(BaseModel):
-    query: str = Field(..., description="The query to rank the documents against")
-    documents: List[Document] = Field(..., description="The documents to be reranked")
+    query: str
+    documents: List[dict]
 
 class RerankResponse(BaseModel):
-    reranked_documents: List[Document] = Field(..., description="The reranked documents")
+    reranked_documents: List[dict]
 
 @app.post("/rerank", response_model=RerankResponse)
-async def rerank_documents(rerank_request: RerankRequest):
-    docs = [doc.text for doc in rerank_request.documents]
-    doc_ids = [doc.doc_id for doc in rerank_request.documents]
-    reranked_results = ranker.rank(
-        query=rerank_request.query,
-        docs=docs,
-        doc_ids=doc_ids
-    )
-    reranked_documents = [
-        Document(doc_id=result.doc_id, text=result.text)
-        for result in reranked_results.results
+async def rerank(request: RerankRequest):
+    query = request.query
+    documents = [
+        Document(
+            text=doc["text"] if doc.get("text") else "",
+            doc_id=doc["doc_id"],
+            metadata=doc.get("metadata", {})
+        )
+        for doc in request.documents
     ]
-    return RerankResponse(reranked_documents=reranked_documents)
+
+    results = ranker.rank(query=query, docs=documents)
+
+    reranked_documents = [
+        {
+            "doc_id": result.document.doc_id,
+            "text": result.document.text,
+            "metadata": result.document.metadata,
+            "score": result.score,
+        }
+        for result in results
+    ]
+
+    return {"reranked_documents": reranked_documents}

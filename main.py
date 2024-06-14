@@ -24,6 +24,7 @@ reranker_api_keys = {
 
 # Initialize the ranker with the Jina API key
 ranker = Reranker("jina", model_type="api", api_key=jina_api_key)
+
 class RerankRequest(BaseModel):
     query: str
     documents: List[dict]

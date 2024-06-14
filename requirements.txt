@@ -1,3 +1,2 @@
 fastapi[all]
 rerankers[transformers]
-nmslib

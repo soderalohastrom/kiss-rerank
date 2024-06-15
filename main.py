@@ -10,9 +10,8 @@ load_dotenv()
 
 app = FastAPI()
 
-
 # Initialize the ranker with the Jina API key
-ranker = Reranker("mixedbread.ai", model_type="api", api_key="emb_8aa8d8641e35bc38f79cd38ba825f8972c7d4ccb9a270155")
+ranker = Reranker("mixedbread.ai", model_type="api", api_key='emb_8aa8d8641e35bc38f79cd38ba825f8972c7d4ccb9a270155')
 
 class RerankRequest(BaseModel):
     query: str

@@ -1,2 +1,3 @@
 fastapi[all]
-rerankers[gpt]
+litellm
+git+https://github.com/soderalohastrom/rerankers.git@main#egg=rerankers

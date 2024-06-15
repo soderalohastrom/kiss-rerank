@@ -1,5 +1,8 @@
 fastapi[all]
-rerankers[rankllm]
+litellm
+git+https://github.com/soderalohastrom/rerankers.git@main#egg=rerankers
+git+https://github.com/soderalohastrom/rank_llm.git@main#egg=rank_llm
+nmslib-metabrainz
 tqdm>=4.66.2
 openai>=1.23.6
 tiktoken>=0.6.0

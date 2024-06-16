@@ -1,2 +1,6 @@
 fastapi[all]
-rerankers[transformer]
+rerankers
+transformers
+torch
+"sentencepiece
+protobuf

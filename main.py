@@ -13,6 +13,11 @@ app = FastAPI()
 # Initialize the ranker with the Jina API key
 ranker = Reranker("cohere", model_type="api", api_key="n1ytpDT5S9jVqY1abqvqoD6flMgo8M25UJce9fLy")
 
+class Document(BaseModel):
+    text: str
+    doc_id: str
+    metadata: dict = Field(default_factory=dict)
+
 class RerankRequest(BaseModel):
     query: str
     documents: List[dict]

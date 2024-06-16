@@ -14,6 +14,11 @@ app = FastAPI()
 # ranker = Reranker('mixedbread-ai/mxbai-rerank-large-v1', model_type='cross-encoder')
 ranker = Reranker('cross-encoder', model_type='cross-encoder')
 
+class Document(BaseModel):
+    text: str
+    doc_id: str
+    metadata: dict = Field(default_factory=dict)
+
 class RerankRequest(BaseModel):
     query: str
     documents: List[dict]

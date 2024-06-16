@@ -20,7 +20,7 @@ voyage_api_key = os.getenv('VOYAGEAI_API_KEY')
 reranker_api_keys = {
     'jina': jina_api_key,
     'cohere': cohere_api_key,
-    'mixedbread.ai': mixedbread_api_key
+    'mixedbread.ai': mixedbread_api_key,
     'voyage': voyage_api_key
 }
 

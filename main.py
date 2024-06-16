@@ -14,16 +14,18 @@ app = FastAPI()
 cohere_api_key = os.getenv('COHERE_API_KEY')
 mixedbread_api_key = os.getenv('MIXEDBREAD_API_KEY')
 jina_api_key = os.getenv('JINA_API_KEY')
+voyage_api_key = os.getenv('VOYAGEAI_API_KEY')
 
 # Map reranker names to their corresponding API keys
 reranker_api_keys = {
     'jina': jina_api_key,
     'cohere': cohere_api_key,
     'mixedbread.ai': mixedbread_api_key
+    'voyage': voyage_api_key
 }
 
 # Initialize the ranker with the Jina API key
-ranker = Reranker("jina", model_type="api", api_key=jina_api_key)
+ranker = Reranker("voyage", model_type="api", api_key=voyage_api_key)
 
 class RerankRequest(BaseModel):
     query: str

@@ -2,5 +2,5 @@ fastapi[all]
 rerankers
 transformers
 torch
-"sentencepiece
+sentencepiece
 protobuf

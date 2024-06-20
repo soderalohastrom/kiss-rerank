@@ -11,8 +11,8 @@ load_dotenv()
 app = FastAPI()
 
 # ranker = Reranker("cohere", lang='en', api_key='n1ytpDT5S9jVqY1abqvqoD6flMgo8M25UJce9fLy')
-ranker = Reranker('BAAI/bge-reranker-v2-m3', model_type='cross-encoder')
-# ranker = Reranker('cross-encoder', model_type='cross-encoder')
+# ranker = Reranker('BAAI/bge-reranker-v2-m3', model_type='cross-encoder')
+ranker = Reranker('cross-encoder', model_type='cross-encoder')
 
 class Document(BaseModel):
     text: str

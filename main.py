@@ -30,9 +30,14 @@ reranker_api_keys = {
 }
 
 # Initialize the ranker with the desired API key
-# ranker = Reranker("cohere", model_type="api", api_key=cohere_api_key)
+ranker = Reranker("cohere", model_type="api", api_key=cohere_api_key)
 # ranker = Reranker("jina", model_type="api", api_key=jina_api_key)
-ranker = Reranker("mixedbread.ai", model_type="api", api_key=mixedbread_api_key)
+# ranker = Reranker("mixedbread.ai", model_type="api", api_key=mixedbread_api_key)
+
+class Document(BaseModel):
+    text: str
+    doc_id: str
+    metadata: dict = Field(default_factory=dict)
 
 class RerankRequest(BaseModel):
     query: str

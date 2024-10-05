@@ -1,2 +1,4 @@
 fastapi[all]
 rerankers[api]
+rerankers[rankgpt]
+python-dotenv

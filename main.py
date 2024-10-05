@@ -37,15 +37,10 @@ ranker = Reranker("cohere", model_type="api", api_key=cohere_api_key)
 # ranker = Reranker("mixedbread.ai", model_type="api", api_key=mixedbread_api_key)
 # ranker = Reranker("voyage", model_type="api", api_key=voyage_api_key)
 
-class Document(BaseModel):
-    text: str
-    doc_id: str
-    metadata: dict = Field(default_factory=dict)
-
 class RerankRequest(BaseModel):
     query: str
     documents: List[dict]
-
+    
 class RerankResponse(BaseModel):
     reranked_documents: List[dict]
 

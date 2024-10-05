@@ -48,26 +48,49 @@ class RerankResponse(BaseModel):
 
 @app.post("/rerank", response_model=RerankResponse)
 async def rerank(request: RerankRequest):
-    query = request.query
-    documents = [
-        Document(
-            text=doc["text"] if doc.get("text") else "",
-            doc_id=doc["doc_id"],
-            metadata=doc.get("metadata", {})
-        )
-        for doc in request.documents
-    ]
+    try:
+        query = request.query
+        documents = [
+            Document(
+                text=doc.get("text", ""),
+                doc_id=doc["doc_id"],
+                metadata=doc.get("metadata", {})
+            )
+            for doc in request.documents
+        ]
 
-    results = ranker.rank(query=query, docs=documents)
+        results = ranker.rank(query=query, docs=documents)
 
-    reranked_documents = [
-        {
-            "doc_id": result.document.doc_id,
-            "text": result.document.text,
-            "metadata": result.document.metadata,
-            "score": result.score,
-        }
-        for result in results
-    ]
+        # Log the structure of the results for debugging
+        logger.info(f"Ranker results structure: {type(results)}")
+        logger.info(f"Ranker results content: {results}")
 
-    return {"reranked_documents": reranked_documents}
+        # Handle different possible result structures
+        if isinstance(results, list):
+            reranked_documents = [
+                {
+                    "doc_id": getattr(result.document, 'doc_id', None) or result.get('doc_id'),
+                    "text": getattr(result.document, 'text', None) or result.get('text', ''),
+                    "metadata": getattr(result.document, 'metadata', None) or result.get('metadata', {}),
+                    "score": getattr(result, 'score', None) or result.get('score', 0),
+                }
+                for result in results
+            ]
+        elif isinstance(results, dict) and 'results' in results:
+            reranked_documents = [
+                {
+                    "doc_id": doc.get('doc_id'),
+                    "text": doc.get('text', ''),
+                    "metadata": doc.get('metadata', {}),
+                    "score": doc.get('score', 0),
+                }
+                for doc in results['results']
+            ]
+        else:
+            raise ValueError("Unexpected result structure from ranker")
+
+        return {"reranked_documents": reranked_documents}
+
+    except Exception as e:
+        logger.error(f"Error in reranking: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))

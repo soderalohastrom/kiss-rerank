@@ -1,10 +1,7 @@
-import logging
-from fastapi import FastAPI, Request, HTTPException, Response
-from pydantic import BaseModel, Field
-from typing import List
-import json
-from pprint import pprint
-from rerankers import Reranker
+from fastapi import FastAPI
+from pydantic import BaseModel
+from typing import List, Any
+from rerankers import Reranker, Document
 from dotenv import load_dotenv
 import os
 
@@ -12,10 +9,6 @@ import os
 load_dotenv()
 
 app = FastAPI()
-
-# Set up logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger("fastapi")
 
 # Retrieve the API keys from environment variables
 cohere_api_key = os.getenv('COHERE_API_KEY')
@@ -37,39 +30,6 @@ ranker = Reranker("cohere", model_type="api", api_key=cohere_api_key)
 # ranker = Reranker("mixedbread.ai", model_type="api", api_key=mixedbread_api_key)
 # ranker = Reranker("voyage", model_type="api", api_key=voyage_api_key)
 
-class RerankRequest(BaseModel):
-    query: str
-    documents: List[dict]
-    
-class RerankResponse(BaseModel):
-    reranked_documents: List[dict]
-    
-@app.post("/rerank", response_model=RerankResponse)
-async def rerank(request: RerankRequest):
-    query = request.query
-    documents = [
-        Document(
-            text=doc["text"] if doc.get("text") else "",
-            doc_id=doc["doc_id"],
-            metadata=doc.get("metadata", {})
-        )
-        for doc in request.documents
-    ]
-    results = ranker.rank(query=query, docs=documents)
-    reranked_documents = [
-        {
-            "doc_id": result.document.doc_id,
-            "text": result.document.text,
-            "metadata": result.document.metadata,
-            "score": result.score,
-        }
-        for result in results
-    ]
-    return {"reranked_documents": reranked_documents}
-class Document(BaseModel):
-    text: str
-    doc_id: str
-    metadata: dict = Field(default_factory=dict)
 class RerankRequest(BaseModel):
     query: str
     documents: List[dict]

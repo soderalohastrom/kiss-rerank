@@ -39,7 +39,7 @@ ranker = Reranker("cohere", model_type="api", api_key=cohere_api_key)
 
 class Document(BaseModel):
     text: str
-    doc_id: Union[str, int]  # Allow both string and integer
+    doc_id: str
     metadata: dict = Field(default_factory=dict)
 
 class RerankRequest(BaseModel):

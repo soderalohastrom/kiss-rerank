@@ -12,6 +12,7 @@ app = FastAPI()
 
 # ranker = Reranker("rankgpt", model_type = "rankgpt", api_key = os.getenv('OPENAI_API_KEY'))
 ranker = Reranker("claude-3-5-sonnet-20240620", model_type = "rankgpt", api_key = os.getenv('ANTHROPIC_API_KEY'))
+# ranker = Reranker("MY_LLM_NAME" (check litellm docs), model_type = "rankgpt", api_key = API_KEY)
 
 class RerankRequest(BaseModel):
     query: str
